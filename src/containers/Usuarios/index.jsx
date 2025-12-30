@@ -3,7 +3,7 @@
 
 function Usuarios() {
     return(
-        <div></div>
+        <div><h1>Usuarios</h1></div>
     )
 }
 

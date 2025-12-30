@@ -4,7 +4,7 @@
 function CadastroEpi(){
 
     return(
-        <div></div>
+        <div><h1>Cadastro de EPI</h1></div>
     )
 }
 

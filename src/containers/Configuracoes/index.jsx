@@ -2,7 +2,7 @@
 
 function Configuracoes() {
     return(
-        <div></div>
+        <div><h1>Configurações</h1></div>
     )
 }
 

@@ -3,7 +3,7 @@
 
 function Relatorios() {
     return(
-        <div></div>
+        <div><h1>Relatórios</h1></div>
     )
 }   
 

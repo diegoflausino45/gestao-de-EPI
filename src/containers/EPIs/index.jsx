@@ -2,7 +2,7 @@
 
 function EPIs() {
     return(
-        <div></div>
+        <div><h1>EPIs</h1></div>
     )
 }   
 

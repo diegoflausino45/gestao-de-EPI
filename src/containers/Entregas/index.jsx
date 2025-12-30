@@ -2,7 +2,7 @@
 
 function Entregas() {
     return(
-        <div></div>
+        <div><h1>Entregas</h1></div>
     )
 }       
 

@@ -2,7 +2,7 @@
 
 function Estoque() {
     return(
-        <div></div>
+        <div><h1>Estoque</h1></div>
     )
 }
 
