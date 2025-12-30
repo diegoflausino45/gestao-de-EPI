@@ -22,28 +22,31 @@ import Breadcrumb from "../components/Breadcrumb"
 
 function AppRouter() {
     return (
-        
+
         <BrowserRouter>
-       <SideBar/>
-        <div className={Styles.contenteside}>
-            <Header/>
-            <Breadcrumb/>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/epis" element={<EPI />} />
-                <Route path="/estoque" element={<Estoque />} />
-                <Route path="/entregas" element={<Entregas />} />
-                <Route path="/devolucao" element={<Devolucao />} />
-                <Route path="/relatorios" element={<Relatorios />} />
-                <Route path="/usuarios" element={<Usuarios />} />
-                <Route path="/configuracoes" element={<Configuracoes />} />
-                <Route path="/cadastro-epi" element={<CadastroEPI />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="*" element={<NotFound/>} />
-            </Routes>
-        </div>
-        
-            
+            <SideBar />
+            <div className={Styles.contenteside}>
+                <Header />
+                <Breadcrumb />
+                <div className={Styles.content}>
+
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/epis" element={<EPI />} />
+                        <Route path="/estoque" element={<Estoque />} />
+                        <Route path="/entregas" element={<Entregas />} />
+                        <Route path="/devolucao" element={<Devolucao />} />
+                        <Route path="/relatorios" element={<Relatorios />} />
+                        <Route path="/usuarios" element={<Usuarios />} />
+                        <Route path="/configuracoes" element={<Configuracoes />} />
+                        <Route path="/cadastro-epi" element={<CadastroEPI />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="*" element={<NotFound />} />
+                    </Routes>
+                </div>
+            </div>
+
+
         </BrowserRouter>
     )
 }
