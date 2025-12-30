@@ -4,7 +4,12 @@
   box-sizing: border-box;
 }
 
+html, body{
+  height: 100%;
+  width: 100%;
+}
+
 body {
   font-family: 'Inter', sans-serif;
-  background: #f9fafb;
+  background: #e6e6e6;
 }

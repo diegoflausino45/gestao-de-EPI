@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+import Styles from "./styles.module.css"
 
 
 import Home from "../containers/Home"
@@ -10,12 +11,16 @@ function AppRouter() {
     return (
         
         <BrowserRouter>
-        <Header/>
-        <SideBar/>
+       <SideBar/>
+        <div className={Styles.contenteside}>
+            <Header/>
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="*" element={<NotFound/>} />
             </Routes>
+        </div>
+        
+            
         </BrowserRouter>
     )
 }
