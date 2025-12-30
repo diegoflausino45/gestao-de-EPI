@@ -5,9 +5,13 @@ import {
     Package,
     Users
 } from "lucide-react";
-import EpiConsumptionChart from "../../components/Graficos/EpiConsumptionChart";
-import EpiCategoryChart from "../../components/Graficos/EpiCategoryChart";
+import EpiConsumptionChart from "../../components/Charts/EpiConsumptionChart";
+import EpiCategoryChart from "../../components/Charts/EpiCategoryChart";
 import { epiConsumptionData, epiCategoryData } from "../../data/dashboardMock";
+import AlertsPanel from "../../components/Alerts/AlertsPanel";
+import { alertsMock } from "../../data/alertsMock";
+import LastDeliveriesTable from "../../components/tables/LastDeliveriesTable";
+import { lastDeliveriesMock } from "../../data/lastDeliveriesMock";
 
 function Home() {
     return (
@@ -50,6 +54,11 @@ function Home() {
                 <div className={styles.chartCard}>
                     <EpiCategoryChart data={epiCategoryData} />
                 </div>
+            </div>
+
+            <div className={styles.bottomGrid}>
+                <AlertsPanel alerts={alertsMock} />
+                <LastDeliveriesTable deliveries={lastDeliveriesMock} />
             </div>
         </div>
     )
