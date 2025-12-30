@@ -1,4 +1,3 @@
-import 'assests/styles/global.css';
 
 function Header() {
 

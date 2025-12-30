@@ -1,4 +1,3 @@
-import 'assets/styles/global.css';
 
 function SideBar() {
 
@@ -9,4 +8,4 @@ function SideBar() {
     )
 }
 
-export default SideBar;
+export default SideBar
