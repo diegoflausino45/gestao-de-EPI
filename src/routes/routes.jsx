@@ -24,9 +24,9 @@ function AppRouter() {
     return (
 
         <BrowserRouter>
-            <SideBar />
-            <div className={Styles.contenteside}>
                 <Header />
+            <div className={Styles.contenteside}>
+            <SideBar />
                 <Breadcrumb />
                 <div className={Styles.content}>
 
