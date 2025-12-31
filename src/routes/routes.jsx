@@ -5,7 +5,6 @@ import Styles from "./styles.module.css"
 import Home from "../containers/Home"
 import Funcionarios from "../containers/Funcionarios"
 import EPI from "../containers/EPIs"
-import Estoque from "../containers/Estoque"
 import Entregas from "../containers/Entregas"
 import Devolucao from "../containers/Devolucao"
 import Relatorios from "../containers/Relatorios"
@@ -35,7 +34,6 @@ function AppRouter() {
                         <Route path="/" element={<Home />} />
                         <Route path="/funcionarios" element={<Funcionarios />} />
                         <Route path="/epis" element={<EPI />} />
-                        <Route path="/estoque" element={<Estoque />} />
                         <Route path="/entregas" element={<Entregas />} />
                         <Route path="/devolucao" element={<Devolucao />} />
                         <Route path="/relatorios" element={<Relatorios />} />

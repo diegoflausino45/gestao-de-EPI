@@ -1,14 +1,11 @@
 import {
   FiHome,
   FiBox,
-  FiArchive,
   FiTruck,
-  FiRotateCcw,
   FiBarChart2,
   FiUsers,
   FiSettings,
   FiLogOut,
-  FiUserCheck
 } from "react-icons/fi";
 
 import { NavLink } from "react-router-dom";
@@ -23,11 +20,8 @@ function SideBar() {
         <NavItem to="/" icon={<FiHome />} label="Dashboard" />
         <NavItem to="/funcionarios" icon={<FiUsers />} label="Funcionários" />
         <NavItem to="/epis" icon={<FiBox />} label="EPI's" />
-        <NavItem to="/estoque" icon={<FiArchive />} label="Estoque" />
         <NavItem to="/entregas" icon={<FiTruck />} label="Entregas" />
-        <NavItem to="/devolucao" icon={<FiRotateCcw />} label="Devolução" />
         <NavItem to="/relatorios" icon={<FiBarChart2 />} label="Relatórios" />
-        <NavItem to="/usuarios" icon={<FiUserCheck />} label="Usuários" />
         <NavItem to="/configuracoes" icon={<FiSettings />} label="Configurações" />
 
         <li className={Styles.logoutButton}>
