@@ -3,6 +3,7 @@ import Styles from "./styles.module.css"
 
 
 import Home from "../containers/Home"
+import Funcionarios from "../containers/Funcionarios"
 import EPI from "../containers/EPIs"
 import Estoque from "../containers/Estoque"
 import Entregas from "../containers/Entregas"
@@ -32,6 +33,7 @@ function AppRouter() {
 
                     <Routes>
                         <Route path="/" element={<Home />} />
+                        <Route path="/funcionarios" element={<Funcionarios />} />
                         <Route path="/epis" element={<EPI />} />
                         <Route path="/estoque" element={<Estoque />} />
                         <Route path="/entregas" element={<Entregas />} />
