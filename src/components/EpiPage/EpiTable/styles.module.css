@@ -51,47 +51,23 @@ tbody tr:hover {
   color: #fff;
 }
 
-/* Linha inativa */
-.inativo {
-  background-color: #ffe5e5;
-  position: relative;
+/* Botão excluir */
+.deleteBtn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #dc3545;
+  background: #dc3545;
+    color: #fff;
+    font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-
+.deleteBtn:hover {
+  background: #c82333;
+}
 /* Ações */
 .actions {
   display: flex;
   gap: 8px;
 }
 
-/* Botão inativar */
-.inactivateBtn {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: none;
-  background: #dc2626;
-  color: #fff;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.inactivateBtn:hover {
-    background: #b91c1c;
-    color: #fff;
-}
-
-/* Label inativo */
-.inativoLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: #842029;
-}
-
-
-.activateBtn {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: none;
-  background: #16a34a;
-  color: #fff;
-  cursor: pointer;
-}

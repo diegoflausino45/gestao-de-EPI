@@ -1,7 +1,18 @@
+import { useState } from "react";
 import { funcionariosMock } from "../../../data/funcionarioMock";
- import styles from "./styles.module.css";
+import styles from "./styles.module.css";
 
- function FuncionariosTable() {
+function FuncionariosTable() {
+  const [funcionarios, setFuncionarios] = useState(funcionariosMock);
+
+  function toggleStatus(id) {
+    setFuncionarios(prev =>
+      prev.map(f =>
+        f.id === id ? { ...f, ativo: !f.ativo } : f
+      )
+    );
+  }
+
   return (
     <div className={styles.tableWrapper}>
       <table>
@@ -12,19 +23,34 @@ import { funcionariosMock } from "../../../data/funcionarioMock";
             <th>Setor</th>
             <th>EPIs Recebidos</th>
             <th>Última Entrega</th>
-            <th></th>
+            <th>Ações</th>
           </tr>
         </thead>
+
         <tbody>
-          {funcionariosMock.map(f => (
-            <tr key={f.id}>
+          {funcionarios.map(f => (
+            <tr
+              key={f.id}
+              className={!f.ativo ? styles.inativo : ""}
+            >
               <td>{f.nome}</td>
               <td>{f.cargo}</td>
               <td>{f.setor}</td>
               <td>{f.epis.join(", ")}</td>
               <td>{f.ultimaEntrega}</td>
-              <td>
-                <button className={styles.editBtn}>Editar</button>
+              <td className={styles.actions}>
+                <button className={styles.editBtn}>
+                  Editar
+                </button>
+
+                <button
+                  onClick={() => toggleStatus(f.id)}
+                  className={
+                    f.ativo ? styles.inactivateBtn : styles.activateBtn
+                  }
+                >
+                  {f.ativo ? "Inativar" : "Ativar"}
+                </button>
               </td>
             </tr>
           ))}

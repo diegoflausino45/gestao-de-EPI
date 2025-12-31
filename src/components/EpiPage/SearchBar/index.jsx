@@ -7,7 +7,7 @@ function SearchBar() {
       <FiSearch className={styles.icon} />
       <input
       type="text"
-      placeholder="Buscar funcionário por nome, cargo ou setor"
+      placeholder="Buscar EPI..."
       style={{
         width: "100%",
         padding: "10px",
