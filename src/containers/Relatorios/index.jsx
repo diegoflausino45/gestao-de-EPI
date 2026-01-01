@@ -1,10 +1,31 @@
+import { FiArrowDown } from "react-icons/fi";
+
+import styles from "./styles.module.css";
+import EntregasTable from "../../components/EntregasPage/EntregasTable";
+import RelatorioTable from "../../components/RelatoriosPage/RelatoriosTable";
+
+import { entregasMock } from "../../data/entregasMock";
 
 
+export default function Relatorios() {
 
-function Relatorios() {
-    return(
-        <div><h1>Relatórios</h1></div>
-    )
-}   
+  return (
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1>Relatórios</h1>
+        <button className={styles.addBtn}>
+          <FiArrowDown/> Exportar...
+        </button>
+      </header>
 
-export default Relatorios
+      
+
+      <RelatorioTable/>
+
+      <br/>
+      <EntregasTable
+        dados={entregasMock}
+      />
+    </div>
+  );
+}
