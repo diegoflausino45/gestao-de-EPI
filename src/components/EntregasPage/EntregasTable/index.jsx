@@ -1,7 +1,6 @@
-import { entregasMock } from "../../../data/entregasMock";
 import styles from "./styles.module.css";
 
-function EntregasTable() {
+function EntregasTable({ dados }) {
 
   return (
     <div className={styles.tableWrapper}>
@@ -18,7 +17,7 @@ function EntregasTable() {
         </thead>
 
         <tbody>
-          {entregasMock.map(f => (
+          {dados.map(f => (
             <tr key={f.id} >
               <td>{f.funcionario.nome}</td>
               <td>{f.epi.nome}</td>

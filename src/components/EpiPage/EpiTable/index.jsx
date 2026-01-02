@@ -1,7 +1,6 @@
-import { epiMock } from "../../../data/epiMock";
 import styles from "./styles.module.css";
 
-function EpiTable() {
+function EpiTable({dados}) {
 
   return (
     <div className={styles.tableWrapper}>
@@ -19,7 +18,7 @@ function EpiTable() {
         </thead>
 
         <tbody>
-          {epiMock.map(f => (
+          {dados.map(f => (
             <tr key={f.id} >
               <td>{f.nome}</td>
               <td>{f.categoria}</td>
