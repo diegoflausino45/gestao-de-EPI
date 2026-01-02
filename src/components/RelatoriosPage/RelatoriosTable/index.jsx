@@ -1,4 +1,3 @@
-import { entregasMock } from "../../../data/entregasMock";
 import styles from "./styles.module.css";
 
 function RelatorioTable() {
@@ -6,32 +5,33 @@ function RelatorioTable() {
   return (
     <div className={styles.tableWrapper}>
       <table>
+        <tbody>
           <tr>
             <th>Filtros</th>
           </tr>
-
+        </tbody>
         <tbody>
-          <div className={styles.row}>
-        <div className={styles.field}>
+          <tr className={styles.row}>
+        <td className={styles.field}>
           <label>Período</label>
-          <div className={styles.periodo}>
+          <td className={styles.periodo}>
             <input type="date" />
             <input type="date" />
-          </div>
-        </div>
-      </div>
+          </td>
+        </td>
+      </tr>
 
-      <div className={styles.row}>
-        <div className={styles.field}>
+      <tr className={styles.row}>
+        <td className={styles.field}>
           <label>Funcionário</label>
           <select>
             <option value="">- Selecione -</option>
             <option>João Silva</option>
             <option>Maria Souza</option>
           </select>
-        </div>
+        </td>
 
-        <div className={styles.field}>
+        <td className={styles.field}>
           <label>Setor</label>
           <select>
             <option value="">- Selecione -</option>
@@ -39,12 +39,12 @@ function RelatorioTable() {
             <option>Administrativo</option>
             <option>Logística</option>
           </select>
-        </div>
-      </div>
+        </td>
+      </tr>
 
-      <button className={styles.button}>Gerar Relatório</button>
         </tbody>
       </table>
+      <button className={styles.button}>Gerar Relatório</button>
     </div>
   );
 }

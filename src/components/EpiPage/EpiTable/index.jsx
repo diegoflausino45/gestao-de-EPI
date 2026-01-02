@@ -1,6 +1,6 @@
 import styles from "./styles.module.css";
 
-function EpiTable({dados}) {
+function EpiTable({dados, onEdit}) {
 
   return (
     <div className={styles.tableWrapper}>
@@ -27,7 +27,7 @@ function EpiTable({dados}) {
               <td>{f.estoqueMinimo}</td>
               <td>{f.status}</td>
               <td className={styles.actions}>
-                <button className={styles.editBtn}>
+                <button className={styles.editBtn} onClick={() => onEdit(f)}>
                   Editar
                 </button>
 

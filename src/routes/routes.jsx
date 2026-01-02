@@ -29,7 +29,6 @@ function AppRouter() {
             <SideBar />
                 <Breadcrumb />
                 <div className={Styles.content}>
-
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/funcionarios" element={<Funcionarios />} />
@@ -45,9 +44,8 @@ function AppRouter() {
                     </Routes>
                 </div>
             </div>
-
-
         </BrowserRouter>
+        
     )
 }
 

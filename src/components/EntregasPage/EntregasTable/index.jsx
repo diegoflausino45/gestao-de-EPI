@@ -1,6 +1,6 @@
 import styles from "./styles.module.css";
 
-function EntregasTable({ dados }) {
+function EntregasTable({ dados, onView }) {
 
   return (
     <div className={styles.tableWrapper}>
@@ -25,7 +25,7 @@ function EntregasTable({ dados }) {
               <td>{f.dataEntrega}</td>
               <td>{f.responsavel}</td>
               <td className={styles.actions}>
-                <button className={styles.viewBtn}>
+                <button className={styles.viewBtn} onClick={() => onView(f)}>
                   Visualizar
                 </button>
               </td>
