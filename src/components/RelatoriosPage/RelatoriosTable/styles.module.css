@@ -81,6 +81,7 @@ tbody tr:hover {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+  cursor: pointer;
 }
 
 .periodo {
@@ -88,9 +89,14 @@ tbody tr:hover {
   gap: 10px;
 }
 
+.periodo input {
+  padding: 0 10px;
+  cursor:text;
+}
+
 .button {
   padding: 10px 18px;
-  background-color: rgb(47, 3, 245);
+  background-color: rgb(255, 0, 0);
   color: #ffffff;
   font-weight: 900;
   border: none;
@@ -102,5 +108,5 @@ tbody tr:hover {
 }
 
 .button:hover {
-  background-color: #d2d2d2;
+  background-color: rgb(200, 0, 0);
 }
