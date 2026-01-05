@@ -5,16 +5,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  overflow-y: auto; /* 🔥 permite scroll */
+  padding: 16px;    /* evita colar nas bordas */
   z-index: 999;
 }
 
+
 .container {
   background: #fff;
-  width: 480px;
+  width: 700px;
+  max-width: 100%;
+  max-height: 90vh; /* 🔥 nunca passa da tela */
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   animation: fadeIn 0.2s ease;
+
+  display: flex;
+  flex-direction: column;
 }
+
 
 .header {
   display: flex;
@@ -22,6 +32,7 @@
   align-items: center;
   padding: 16px;
   border-bottom: 1px solid #eee;
+  flex-shrink: 0;
 }
 
 .header h2 {
@@ -37,7 +48,9 @@
 
 .content {
   padding: 16px;
+  overflow-y: auto; /* 🔥 scroll interno */
 }
+
 
 @keyframes fadeIn {
   from {

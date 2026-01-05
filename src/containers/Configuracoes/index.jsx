@@ -1,4 +1,7 @@
 import styles from "./styles.module.css";
+import { useState } from "react";
+import EmpresaConfigModal from "./../../components/ConfiguracoesPage/ConfigEmpresaModal";
+import { empresaConfigMock } from "../../data/empresaConfigMock";
 import {
   FiSettings,
   FiBell,
@@ -33,7 +36,17 @@ function Item({ icon: Icon, title, description }) {
     </div>
   );
 }
+
+
 function Configuracoes() {
+
+    const [open, setOpen] = useState(false);
+  const [empresa, setEmpresa] = useState(empresaConfigMock);
+
+  function handleSave(dados) {
+    setEmpresa(dados);
+    console.log("Empresa salva:", dados);
+  }
   return (
       <div className={styles.container}>
 
@@ -42,11 +55,11 @@ function Configuracoes() {
                   <Item
                       icon={FiSettings}
                       title="Configurações da Empresa"
-                      description="Configurar informações da empresa"
+                      description="Informações da empresa"
                   />
-                  <button className={styles.editButton}>
+                  <button className={styles.editButton} onClick={() => setOpen(true)}>
                       <FiEdit />
-                      Editar
+                      Visualizar
                   </button>
               </div>
 
@@ -126,6 +139,12 @@ function Configuracoes() {
               </div>
 
           </Section>
+           <EmpresaConfigModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onSave={handleSave}
+        empresa={empresa}
+      />
       </div>
   );
 }
