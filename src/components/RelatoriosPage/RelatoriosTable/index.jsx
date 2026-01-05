@@ -4,34 +4,32 @@ function RelatorioTable() {
 
   return (
     <div className={styles.tableWrapper}>
-      <table>
-        <tbody>
-          <tr>
-            <th>Filtros</th>
-          </tr>
-        </tbody>
-        <tbody>
-          <tr className={styles.row}>
-        <td className={styles.field}>
-          <label>Período</label>
-          <td className={styles.periodo}>
-            <input type="date" />
-            <input type="date" />
-          </td>
-        </td>
-      </tr>
 
-      <tr className={styles.row}>
-        <td className={styles.field}>
+      <div className={styles.header}>
+        <h3>Filtros</h3>
+      </div>
+
+      <div className={styles.row}>
+        <div className={`${styles.field} ${styles.periodo}`}>
+          <label>Período</label>
+          <div className={styles.periodoInputs}>
+            <input type="date" className={styles.date} />
+            <input type="date" className={styles.date} />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.row}>
+        <div className={styles.field}>
           <label>Funcionário</label>
           <select>
             <option value="">- Selecione -</option>
             <option>João Silva</option>
             <option>Maria Souza</option>
           </select>
-        </td>
+        </div>
 
-        <td className={styles.field}>
+        <div className={styles.field}>
           <label>Setor</label>
           <select>
             <option value="">- Selecione -</option>
@@ -39,13 +37,13 @@ function RelatorioTable() {
             <option>Administrativo</option>
             <option>Logística</option>
           </select>
-        </td>
-      </tr>
+        </div>
+      </div>
 
-        </tbody>
-      </table>
       <button className={styles.button}>Gerar Relatório</button>
+
     </div>
+
   );
 }
 
