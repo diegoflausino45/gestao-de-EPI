@@ -132,7 +132,7 @@ export default function EmpresaConfigModal({
           <input
             name="responsavel"
             value={form.responsavel}
-            readOnly readOnly 
+            readOnly 
           />
         </div>
 

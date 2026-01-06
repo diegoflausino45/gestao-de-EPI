@@ -65,18 +65,6 @@ function Configuracoes() {
             Visualizar
           </button>
         </div>
-
-        <div className={styles.containerItens}>
-          <Item
-            icon={FiBell}
-            title="Preferências de Notificação"
-            description="Gerenciar notificações e alertas"
-          />
-          <button className={styles.editButton}>
-            <FiEdit />
-            Definir
-          </button>
-        </div>
       </Section>
 
       <Section title="Gestão de EPIs">
@@ -114,18 +102,6 @@ function Configuracoes() {
             icon={FiUsers}
             title="Setores"
             description="Gerenciar setores da empresa"
-          />
-          <button className={styles.editButton}>
-            <FiEdit />
-            Editar
-          </button>
-        </div>
-
-        <div className={styles.containerItens}>
-          <Item
-            icon={FiBriefcase}
-            title="Cargos"
-            description="Definir cargos dos funcionários"
           />
           <button className={styles.editButton}>
             <FiEdit />
