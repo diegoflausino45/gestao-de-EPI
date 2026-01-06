@@ -14,6 +14,7 @@ import CadastroEPI from "../containers/CadastroEPI"
 import Login from "../containers/Login"
 import NotFound from "../containers/NotFound"
 import Setores from "../containers/Setores"
+import Perfil from "../containers/Perfil"
 
 
 
@@ -44,6 +45,7 @@ function AppRouter() {
                         <Route path="/configuracoes" element={<Configuracoes />} />
                         <Route path="/cadastro-epi" element={<CadastroEPI />} />
                         <Route path="/login" element={<Login />} />
+                        <Route path="/perfil" element={<Perfil />}/>
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </div>
