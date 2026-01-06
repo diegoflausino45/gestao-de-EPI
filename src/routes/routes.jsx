@@ -13,12 +13,14 @@ import Configuracoes from "../containers/Configuracoes"
 import CadastroEPI from "../containers/CadastroEPI"
 import Login from "../containers/Login"
 import NotFound from "../containers/NotFound"
+import Setores from "../containers/Setores"
 
 
 
 import Header from "../components/Header"
 import SideBar from "../components/SideBar"
 import Breadcrumb from "../components/Breadcrumb"
+import ScrollToTop from "../components/ScrollToTop"
 
 function AppRouter() {
     return (
@@ -26,6 +28,7 @@ function AppRouter() {
         <BrowserRouter>
                 <Header />
             <div className={Styles.contenteside}>
+            <ScrollToTop />
             <SideBar />
                 <Breadcrumb />
                 <div className={Styles.content}>
@@ -36,7 +39,8 @@ function AppRouter() {
                         <Route path="/entregas" element={<Entregas />} />
                         <Route path="/configuracoes/devolucao" element={<Devolucao />} />
                         <Route path="/relatorios" element={<Relatorios />} />
-                        <Route path="/usuarios" element={<Usuarios />} />
+                        <Route path="/configuracoes/usuarios" element={<Usuarios />} />
+                        <Route path="/configuracoes/setores" element={<Setores />} />
                         <Route path="/configuracoes" element={<Configuracoes />} />
                         <Route path="/cadastro-epi" element={<CadastroEPI />} />
                         <Route path="/login" element={<Login />} />

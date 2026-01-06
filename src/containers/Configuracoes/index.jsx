@@ -10,11 +10,9 @@ import { tiposEpiMock } from "../../data/tiposEpiMock";
 
 import {
   FiSettings,
-  FiBell,
   FiBox,
   FiRefreshCw,
   FiUsers,
-  FiBriefcase,
   FiEdit,
   FiUser
 } from "react-icons/fi";
@@ -103,10 +101,10 @@ function Configuracoes() {
             title="Setores"
             description="Gerenciar setores da empresa"
           />
-          <button className={styles.editButton}>
+          <Link to="/configuracoes/setores" className={styles.editButton}>
             <FiEdit />
             Editar
-          </button>
+          </Link>
         </div>
       </Section>
 
@@ -117,10 +115,10 @@ function Configuracoes() {
             title="Usuários do Sistema"
             description="Gerenciar acessos ao sistema"
           />
-          <button className={styles.editButton}>
+          <Link to="/configuracoes/usuarios" className={styles.editButton}>
             <FiUser />
             Perfis de Usuário
-          </button>
+          </Link>
         </div>
       </Section>
 
