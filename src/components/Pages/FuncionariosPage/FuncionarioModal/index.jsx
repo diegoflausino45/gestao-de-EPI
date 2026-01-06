@@ -1,34 +1,30 @@
 import { useEffect, useState } from "react";
-import Modal from "../../Modal";
+import Modal from "../../../Modal";
 import styles from "./style.module.css";
 
 const initialState = {
-  funcionario: {
-    nome: ""
-  },
-  epi: {
-    nome: ""
-  },
-  quantidade: 0,
-  dataEntrega: "xx/xx/xxxx",
-  responsavel: ""
+  nome: "",
+  cpf: "",
+  cargo: "",
+  setor: "",
+  status: "Ativo"
 };
 
-export default function EntregasModal({
+export default function FuncionarioModal({
   isOpen,
   onClose,
   onSave,
-  entrega
+  employee
 }) {
   const [form, setForm] = useState(initialState);
 
   useEffect(() => {
-    if (entrega) {
-      setForm(entrega);
+    if (employee) {
+      setForm(employee);
     } else {
       setForm(initialState);
     }
-  }, [entrega]);
+  }, [employee]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -44,54 +40,57 @@ export default function EntregasModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={entrega ? "Visualizar Entrega" : "Nova Entrega"}
+      title={employee ? "Editar Funcionário" : "Novo Funcionário"}
     >
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.group}>
-          <label>Funcionário</label>
+          <label>Nome</label>
           <input
             name="nome"
-            value={form.funcionario.nome}
+            value={form.nome}
             onChange={handleChange}
             required
           />
         </div>
 
         <div className={styles.group}>
-          <label>EPI</label>
+          <label>CPF</label>
           <input
-            name="epi.nome"
-            value={form.epi.nome}
+            name="cpf"
+            value={form.cpf}
             onChange={handleChange}
             required
           />
         </div>
 
         <div className={styles.group}>
-          <label>Quantidade</label>
+          <label>Cargo</label>
           <input
-            name="quantidade"
-            value={form.quantidade}
+            name="cargo"
+            value={form.cargo}
             onChange={handleChange}
           />
         </div>
 
         <div className={styles.group}>
-          <label>Data</label>
+          <label>Setor</label>
           <input
-            name="dataEntrega"
-            value={form.dataEntrega}
+            name="setor"
+            value={form.setor}
             onChange={handleChange}
           />
         </div>
 
         <div className={styles.group}>
-          <label>Responsável</label>
-          <input
-            name="responsavel"
-            value={form.responsavel}
+          <label>Status</label>
+          <select
+            name="status"
+            value={form.status}
             onChange={handleChange}
-          />
+          >
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
         </div>
 
         <div className={styles.actions}>

@@ -1,4 +1,4 @@
-import Modal from "../../Modal";
+import Modal from "../../../Modal";
 import styles from "./style.module.css";
 import { FiEye, FiEdit, FiPlus } from "react-icons/fi";
 

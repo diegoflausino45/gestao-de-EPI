@@ -1,9 +1,9 @@
 import styles from "./styles.module.css";
 import { useState } from "react";
 
-import SearchBar from "../../components/EntregasPage/SearchBar";
-import EntregasTable from "../../components/EntregasPage/EntregasTable";
-import EntregasModal from "../../components/EntregasPage/EntregasModal";
+import SearchBar from "../../components/Pages/EntregasPage/SearchBar";
+import EntregasTable from "../../components/Pages/EntregasPage/EntregasTable";
+import EntregasModal from "../../components/Pages/EntregasPage/EntregasModal";
 
 import { entregasMock } from "../../data/entregasMock";
 

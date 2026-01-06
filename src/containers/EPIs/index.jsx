@@ -1,9 +1,9 @@
 import styles from "./styles.module.css";
 import { useState } from "react";
 
-import SearchBar from "../../components/EpiPage/SearchBar";
-import EpiTable from "../../components/EpiPage/EpiTable";
-import EpiModal from "../../components/EpiPage/EpiModal";
+import SearchBar from "../../components/Pages/EpiPage/SearchBar";
+import EpiTable from "../../components/Pages/EpiPage/EpiTable";
+import EpiModal from "../../components/Pages/EpiPage/EpiModal";
 import { epiMock } from "../../data/epiMock";
 
 

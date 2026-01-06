@@ -1,8 +1,8 @@
 import styles from "./styles.module.css";
 import { useState } from "react";
 
-import EmpresaConfigModal from "../../components/ConfiguracoesPage/ConfigEmpresaModal";
-import TiposEpiModal from "../../components/ConfiguracoesPage/TipoEpiModal";
+import EmpresaConfigModal from "../../components/Pages/ConfiguracoesPage/ConfigEmpresaModal";
+import TiposEpiModal from "../../components/Pages/ConfiguracoesPage/TipoEpiModal";
 
 import { empresaConfigMock } from "../../data/empresaConfigMock";
 import { tiposEpiMock } from "../../data/tiposEpiMock";

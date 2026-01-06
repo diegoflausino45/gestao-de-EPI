@@ -1,10 +1,10 @@
 import { useState } from "react";
 import styles from "./styles.module.css";
 
-import SearchBar from "../../components/FuncionariosPage/SearchBar";
-import FuncionariosTable from "../../components/FuncionariosPage/FuncionariosTable";
-import Pagination from "../../components/FuncionariosPage/Pagination";
-import FuncionarioModal from "../../components/FuncionariosPage/FuncionarioModal";
+import SearchBar from "../../components/Pages/FuncionariosPage/SearchBar";
+import FuncionariosTable from "../../components/Pages/FuncionariosPage/FuncionariosTable";
+import Pagination from "../../components/Pages/FuncionariosPage/Pagination";
+import FuncionarioModal from "../../components/Pages/FuncionariosPage/FuncionarioModal";
 
 import { funcionariosMock } from "../../data/funcionarioMock";
 

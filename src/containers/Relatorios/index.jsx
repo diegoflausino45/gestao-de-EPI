@@ -1,9 +1,9 @@
 import { FiArrowDown } from "react-icons/fi";
 
 import styles from "./styles.module.css";
-import EntregasTable from "../../components/EntregasPage/EntregasTable";
-import RelatorioTable from "../../components/RelatoriosPage/RelatoriosTable";
-import EntregasModal from "../../components/EntregasPage/EntregasModal";
+import EntregasTable from "../../components/Pages/EntregasPage/EntregasTable";
+import RelatorioTable from "../../components/Pages/RelatoriosPage/RelatoriosTable";
+import EntregasModal from "../../components/Pages/EntregasPage/EntregasModal";
 import { useState } from "react";
 import { entregasMock } from "../../data/entregasMock";
 
