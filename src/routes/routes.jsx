@@ -34,7 +34,7 @@ function AppRouter() {
                         <Route path="/funcionarios" element={<Funcionarios />} />
                         <Route path="/epis" element={<EPI />} />
                         <Route path="/entregas" element={<Entregas />} />
-                        <Route path="/devolucao" element={<Devolucao />} />
+                        <Route path="/configuracoes/devolucao" element={<Devolucao />} />
                         <Route path="/relatorios" element={<Relatorios />} />
                         <Route path="/usuarios" element={<Usuarios />} />
                         <Route path="/configuracoes" element={<Configuracoes />} />

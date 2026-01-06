@@ -1,4 +1,5 @@
 import styles from "./styles.module.css";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 
 import EmpresaConfigModal from "../../components/Pages/ConfiguracoesPage/ConfigEmpresaModal";
@@ -100,10 +101,10 @@ function Configuracoes() {
             title="Devoluções"
             description="Realizar devolução"
           />
-          <button className={styles.editButton}>
+          <Link to="/configuracoes/devolucao" className={styles.editButton}>
             <FiEdit />
             Realizar
-          </button>
+          </Link>
         </div>
       </Section>
 
