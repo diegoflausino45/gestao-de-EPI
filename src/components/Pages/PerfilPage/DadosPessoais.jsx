@@ -9,7 +9,8 @@ function DadosDevolucao() {
         <h2><FiUser /> Dados Pessoais</h2>
 
         <div className={styles.profileRow}>
-          <div className={styles.avatar}></div>
+          <div className={styles.avatar}>
+          </div>
 
           <div className={styles.fields}>
             <div className={styles.field}>
