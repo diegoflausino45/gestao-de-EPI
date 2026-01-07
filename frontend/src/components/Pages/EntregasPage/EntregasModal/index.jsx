@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Modal from "../../../Modal";
+import Modal from "../../../Modal"; // Verifique se o caminho do seu componente Modal está correto aqui
 import styles from "./style.module.css";
 
 const initialState = {
@@ -9,29 +9,57 @@ const initialState = {
   epi: {
     nome: ""
   },
-  quantidade: 0,
-  dataEntrega: "xx/xx/xxxx",
+  quantidade: 1, // Melhor começar com 1 do que 0
+  dataEntrega: "", // String vazia é o padrão correto para input type="date"
   responsavel: ""
 };
 
 export default function EntregasModal({
-  isOpen,
-  onClose,
-  onSave,
-  entrega
-}) {
+                                        isOpen,
+                                        onClose,
+                                        onSave,
+                                        entrega
+                                      }) {
   const [form, setForm] = useState(initialState);
 
+  // Carrega os dados quando abre o modal para edição
   useEffect(() => {
     if (entrega) {
       setForm(entrega);
     } else {
       setForm(initialState);
     }
-  }, [entrega]);
+  }, [entrega, isOpen]); // Adicionei isOpen para garantir reset ao abrir
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Lógica específica para o objeto aninhado 'funcionario'
+    if (name === "nome") {
+      setForm((prev) => ({
+        ...prev,
+        funcionario: {
+          ...prev.funcionario,
+          nome: value
+        }
+      }));
+      return;
+    }
+
+    // Lógica específica para o objeto aninhado 'epi'
+    if (name === "epi.nome") {
+      setForm((prev) => ({
+        ...prev,
+        epi: {
+          ...prev.epi,
+          nome: value
+        }
+      }));
+      return;
+    }
+
+    // Lógica padrão para campos simples (quantidade, data, responsavel)
+    setForm((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleSubmit(e) {
@@ -41,68 +69,83 @@ export default function EntregasModal({
   }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={entrega ? "Visualizar Entrega" : "Nova Entrega"}
-    >
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.group}>
-          <label>Funcionário</label>
-          <input
-            name="nome"
-            value={form.funcionario.nome}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      <Modal
+          isOpen={isOpen}
+          onClose={onClose}
+          title={entrega ? "Editar Entrega" : "Nova Entrega"}
+      >
+        <form className={styles.form} onSubmit={handleSubmit}>
 
-        <div className={styles.group}>
-          <label>EPI</label>
-          <input
-            name="epi.nome"
-            value={form.epi.nome}
-            onChange={handleChange}
-            required
-          />
-        </div>
+          {/* Grupo Funcionário */}
+          <div className={styles.group}>
+            <label>Funcionário</label>
+            <input
+                name="nome"
+                placeholder="Nome do Colaborador"
+                value={form.funcionario.nome}
+                onChange={handleChange}
+                required
+            />
+          </div>
 
-        <div className={styles.group}>
-          <label>Quantidade</label>
-          <input
-            name="quantidade"
-            value={form.quantidade}
-            onChange={handleChange}
-          />
-        </div>
+          {/* Grupo EPI */}
+          <div className={styles.group}>
+            <label>EPI</label>
+            <input
+                name="epi.nome"
+                placeholder="Nome do Equipamento"
+                value={form.epi.nome}
+                onChange={handleChange}
+                required
+            />
+          </div>
 
-        <div className={styles.group}>
-          <label>Data</label>
-          <input
-            name="dataEntrega"
-            value={form.dataEntrega}
-            onChange={handleChange}
-          />
-        </div>
+          {/* Grupo Quantidade (Number) */}
+          <div className={styles.group}>
+            <label>Quantidade</label>
+            <input
+                name="quantidade"
+                type="number"
+                min="1"
+                value={form.quantidade}
+                onChange={handleChange}
+                required
+            />
+          </div>
 
-        <div className={styles.group}>
-          <label>Responsável</label>
-          <input
-            name="responsavel"
-            value={form.responsavel}
-            onChange={handleChange}
-          />
-        </div>
+          {/* Grupo Data (Date Picker) */}
+          <div className={styles.group}>
+            <label>Data da Entrega</label>
+            <input
+                name="dataEntrega"
+                type="date"
+                value={form.dataEntrega}
+                onChange={handleChange}
+                required
+            />
+          </div>
 
-        <div className={styles.actions}>
-          <button type="button" onClick={onClose}>
-            Cancelar
-          </button>
-          <button type="submit" className={styles.primary}>
-            Salvar
-          </button>
-        </div>
-      </form>
-    </Modal>
+          {/* Grupo Responsável */}
+          <div className={styles.group}>
+            <label>Responsável pela Entrega</label>
+            <input
+                name="responsavel"
+                placeholder="Ex: Almoxarife"
+                value={form.responsavel}
+                onChange={handleChange}
+                required
+            />
+          </div>
+
+          <div className={styles.actions}>
+            <button type="button" onClick={onClose}>
+              Cancelar
+            </button>
+            <button type="submit" className={styles.primary}>
+              Salvar
+            </button>
+          </div>
+        </form>
+      </Modal>
   );
 }
