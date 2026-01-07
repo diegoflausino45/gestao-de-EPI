@@ -1,7 +1,7 @@
 import styles from "./styles.module.css";
 import { useState } from "react";
 
-import SearchBar from "../../components/Pages/EntregasPage/SearchBar";
+import SearchBar from "../../components/SearchBar";
 import EntregasTable from "../../components/Pages/EntregasPage/EntregasTable";
 import EntregasModal from "../../components/Pages/EntregasPage/EntregasModal";
 
@@ -59,7 +59,7 @@ export default function Entregas() {
         </button>
       </header>
 
-      <SearchBar value={search} onChange={setSearch} />
+      <SearchBar value={search} onChange={setSearch} placeholder={"Buscar entrega..."} />
 
       <EntregasTable
         dados={entregasFiltradas}

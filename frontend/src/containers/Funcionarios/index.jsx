@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styles from "./styles.module.css";
 
-import SearchBar from "../../components/Pages/FuncionariosPage/SearchBar";
+import SearchBar from "../../components/SearchBar";
 import FuncionariosTable from "../../components/Pages/FuncionariosPage/FuncionariosTable";
 import Pagination from "../../components/Pages/FuncionariosPage/Pagination";
 import FuncionarioModal from "../../components/Pages/FuncionariosPage/FuncionarioModal";
@@ -70,7 +70,8 @@ export default function Funcionarios() {
 
       <SearchBar 
       value={search}
-      onChange={setSearch}/>
+      onChange={setSearch}
+      placeholder={"Buscar funcionário por nome, cargo ou setor"}/>
 
 
 

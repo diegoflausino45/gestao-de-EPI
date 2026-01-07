@@ -1,7 +1,7 @@
 import styles from "./styles.module.css";
 import { useState } from "react";
 
-import SearchBar from "../../components/Pages/EpiPage/SearchBar";
+import SearchBar from "../../components/SearchBar";
 import EpiTable from "../../components/Pages/EpiPage/EpiTable";
 import EpiModal from "../../components/Pages/EpiPage/EpiModal";
 import { epiMock } from "../../data/epiMock";
@@ -9,7 +9,6 @@ import { epiMock } from "../../data/epiMock";
 
 export default function EPIs() {
   const [search, setSearch] = useState("");
-
 
   const [epi, setEpi] = useState(epiMock);
   const [openModal, setOpenModal] = useState(false);
@@ -60,7 +59,7 @@ export default function EPIs() {
         </button>
       </header>
 
-      <SearchBar value={search} onChange={setSearch} />
+      <SearchBar value={search} onChange={setSearch} placeholder={"Buscar EPI..."}/>
 
       <EpiTable
         dados={epiFiltrados} 

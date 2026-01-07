@@ -1,13 +1,13 @@
 import { FiSearch } from "react-icons/fi";
 import styles from "./styles.module.css";
 
-function SearchBar({ value, onChange }) {
+function SearchBar({ value, onChange, placeholder }) {
   return (
     <div className={styles.searchWrapper}>
       <FiSearch className={styles.icon} />
       <input
         type="text"
-        placeholder="Buscar funcionário por nome, cargo ou setor"
+        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
