@@ -7,7 +7,9 @@ export const funcionariosMock = [
     status: "ativo",
     epis: ["Capacete", "Óculos de Proteção"],
     ultimaEntrega: "2024-04-12",
-    ativo: true
+    ativo: true,
+    // biometria simulada como cadastrada
+    biometriaTemplate: "R1hZV04gREFUQSBGTEFLRS..."
   },
   {
     id: 2,
@@ -17,7 +19,8 @@ export const funcionariosMock = [
     status: "ativo",
     epis: ["Luva Nitrílica"],
     ultimaEntrega: "2024-04-10",
-    ativo: true
+    ativo: true,
+    biometriaTemplate: null //sem digital cadastrada
   },
   {
     id: 3,
