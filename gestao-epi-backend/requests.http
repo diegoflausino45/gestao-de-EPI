@@ -1,12 +1,16 @@
 
+### Listar EPIs (busca do banco GESTAOEPI2)
+GET http://localhost:4000/api/epis
+
+
 ### Criar EPI
-POST http://localhost:3000/api/epis
+POST http://localhost:4000/api/epis
 Content-Type: application/json
 
 {
-  "codigo": "080101.00010",
-  "tipo": "EP",
-  "descricao": "MASCARA DE SOLDA ESAB A20",
+  "codigo": "080101.01442",
+  "tipo": "Proteção FISICA",
+  "descricao": "BOTINA TAM. 38 (BICO DE PLASTICO)",
   "CA": "67890",
   "validadeCA": "2027-06-30T00:00:00.000Z",
   "vidaUtilMeses": 24,
@@ -14,9 +18,26 @@ Content-Type: application/json
   "estoqueMinimo": 5
 }
 
-### Listar EPIs
-GET http://localhost:3000/api/epis
 
+### Consultar Saldo de um Item (NEXTSI_HOMOLOG)
+GET http://localhost:4000/api/itens/080101.00010/saldo-erp
+
+
+### Consultar Saldos em Lote (NEXTSI_HOMOLOG)
+POST http://localhost:4000/api/itens/saldos-erp
+Content-Type: application/json
+
+{
+  "codigos": ["080101.00001", "080102.00020"]
+}
+
+
+### Detalhes de Saldo por Lote/Local/Série
+GET http://localhost:4000/api/itens/080101.00010/saldo-erp/detalhe
+
+
+### Health Check
+GET http://localhost:4000/health
 
 
 ### Health

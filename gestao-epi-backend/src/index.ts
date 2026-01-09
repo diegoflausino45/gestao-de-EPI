@@ -8,15 +8,125 @@ import {
   listarSaldosDetalhados,
   obterSaldosPorItens,
 } from "./services/saldo.service";
+import {
+  listarItensEPNextsi,
+  obterSaldosNextsi,
+  obterSaldoDetalheNextsi,
+  closePool,
+} from "./services/epi-nextsi.service";
 
 const app = express();
+
+// ✅ CORS Configuration
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
 app.use(express.json());
+
+// Mock data para teste (remover quando banco estiver configurado)
+const epiMockData = [
+  {
+    id: 1,
+    codigo: "080101.00010",
+    nome: "MASCARA DE SOLDA ESAB A20",
+    tipo: "Proteção Respiratória",
+    descricao: "MASCARA DE SOLDA ESAB A20",
+    CA: "67890",
+    validadeCA: new Date("2027-06-30"),
+    vidaUtilMeses: 24,
+    fabricante: "Protec",
+    estoqueMinimo: 5,
+  },
+  {
+    id: 2,
+    codigo: "080102.00020",
+    nome: "ÓCULOS DE PROTEÇÃO",
+    tipo: "Proteção Visual",
+    descricao: "ÓCULOS DE PROTEÇÃO",
+    CA: "11234",
+    validadeCA: new Date("2025-07-10"),
+    vidaUtilMeses: 36,
+    fabricante: "3M",
+    estoqueMinimo: 20,
+  },
+  {
+    id: 3,
+    codigo: "080103.00030",
+    nome: "LUVA NITRÍLICA",
+    tipo: "Proteção das Mãos",
+    descricao: "LUVA NITRÍLICA",
+    CA: "99887",
+    validadeCA: new Date("2024-12-05"),
+    vidaUtilMeses: 12,
+    fabricante: "Latex",
+    estoqueMinimo: 40,
+  },
+];
 
 // Exemplo de rotas já existentes
 app.get("/api/epis", async (_req, res, next) => {
   try {
-    const data = await listarEpis();
-    res.json(data);
+    // Tentar carregar do ERP (G01 - itens EP), se falhar, usar mock
+    try {
+      console.log("🔍 [API] Buscando itens EP do NEXTSI_HOMOLOG...");
+      const epis = await listarItensEPNextsi();
+      
+      console.log(`✅ [API] Encontrados ${epis?.length || 0} itens EP`);
+      
+      // Se não houver itens, retornar mock
+      if (!epis || epis.length === 0) {
+        console.log("⚠️ Nenhum item EP encontrado no ERP, usando dados mock");
+        return res.json(epiMockData);
+      }
+
+      // Extrair códigos dos itens (G01_CODIGO)
+      const codigos = epis.map((e: any) => e.G01_CODIGO);
+      console.log(`🔍 [API] Buscando saldos para ${codigos.length} itens...`);
+
+      // Buscar saldos dos itens
+      const saldosDb = await obterSaldosNextsi(codigos);
+      console.log(`✅ [API] Encontrados saldos para ${saldosDb?.length || 0} itens`);
+      
+      // Mapear saldos para acesso rápido
+      const saldosMap = Object.fromEntries(
+        saldosDb.map((s: any) => [s.E01_ITEM, s.SaldoTotal])
+      );
+
+      // Combinar dados: itens G01 + saldos E01
+      const epicsComSaldo = epis.map((e: any) => ({
+        id: e.G01_ID,
+        codigo: e.G01_CODIGO,
+        nome: e.G01_DESCRICAO,
+        tipo: e.G01_TIPO,
+        descricao: e.G01_DESCRICAO,
+        grupoItem: e.G01_GRUPOITEM,
+        um: e.G01_UM,
+        fabricante: e.G01_FABRICANTE,
+        dataNascimento: e.G01_DTNASC,
+        observacoes: e.G01_OBSERVACOES,
+        estoqueAtual: saldosMap[e.G01_CODIGO] ?? 0,
+        estoqueMinimo: 0, // G01 não tem estoqueMinimo, pode ser adicionado depois
+        status:
+          (saldosMap[e.G01_CODIGO] ?? 0) <= 0 ? "CRÍTICO" : "OK",
+      }));
+
+      console.log(`✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`);
+      return res.json(epicsComSaldo);
+    } catch (dbErr: any) {
+      console.error("❌ [API] Erro ao buscar do ERP:");
+      console.error(dbErr.message || dbErr);
+      console.log("⚠️ Usando dados mock como fallback");
+      return res.json(epiMockData);
+    }
   } catch (err) {
     next(err);
   }
@@ -53,7 +163,7 @@ app.get("/api/itens/:codigo/saldo-erp/detalhe", async (req, res, next) => {
   }
 });
 
-// ✅ NOVA ROTA: saldos em lote (POST)
+// ✅ NOVA ROTA: saldos em lote (POST) - Usa ERP
 app.post("/api/itens/saldos-erp", async (req, res, next) => {
   try {
     const { codigos } = req.body as { codigos: string[] };
@@ -62,8 +172,36 @@ app.post("/api/itens/saldos-erp", async (req, res, next) => {
         .status(400)
         .json({ message: 'Informe um array "codigos" com ao menos 1 item.' });
     }
-    const saldos = await obterSaldosPorItens(codigos);
-    res.json({ saldos });
+    
+    // Tentar carregar do ERP (E01), se falhar, usar mock
+    try {
+      const saldosDb = await obterSaldosItensERP(codigos);
+      
+      // Converter resultado para formato esperado
+      const saldos = saldosDb.map((s) => ({
+        codigo: s.E01_ITEM,
+        saldo: s.SaldoTotal || 0,
+      }));
+      
+      return res.json({ saldos });
+    } catch (dbErr) {
+      console.log("⚠️ Banco de dados ERP não acessível, usando saldos mock");
+      console.error(dbErr.message);
+      
+      // Dados mock de saldos
+      const saldosMock = {
+        "080101.00010": 80,
+        "080102.00020": 45,
+        "080103.00030": 35,
+      };
+      
+      const saldos = codigos.map((codigo) => ({
+        codigo,
+        saldo: saldosMock[codigo as keyof typeof saldosMock] ?? 0,
+      }));
+      
+      return res.json({ saldos });
+    }
   } catch (err) {
     next(err);
   }
@@ -89,4 +227,23 @@ app.use(
 );
 
 const PORT = process.env.PORT ?? 4000;
-app.listen(PORT, () => console.log(`API EPI rodando na porta ${PORT}`));
+const server = app.listen(PORT, () => console.log(`API EPI rodando na porta ${PORT}`));
+
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+  console.log("📡 SIGTERM recebido, encerrando gracefully...");
+  await closePool();
+  server.close(() => {
+    console.log("✅ Servidor encerrado");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", async () => {
+  console.log("📡 SIGINT recebido, encerrando gracefully...");
+  await closePool();
+  server.close(() => {
+    console.log("✅ Servidor encerrado");
+    process.exit(0);
+  });
+});

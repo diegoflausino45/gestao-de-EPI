@@ -34,14 +34,52 @@ tbody tr:hover {
   background-color: #f8f9fa;
 }
 
+/* Estoque - alinha à direita */
+.estoque {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Status badge */
+.status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status.ok {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status.atenção {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status.estoque-baixo {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status.crítico {
+  background-color: #dc3545;
+  color: #fff;
+  font-weight: 700;
+}
+
 /* Botão editar */
 .editBtn {
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #ced4da;
-  background: #ffc107 ;
-    color: #000;
-    font-weight: 700;
+  background: #ffc107;
+  color: #000;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -57,17 +95,17 @@ tbody tr:hover {
   border-radius: 6px;
   border: 1px solid #dc3545;
   background: #dc3545;
-    color: #fff;
-    font-weight: 700;
+  color: #fff;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
 }
 .deleteBtn:hover {
   background: #c82333;
 }
+
 /* Ações */
 .actions {
   display: flex;
   gap: 8px;
 }
-
