@@ -7,11 +7,101 @@ datasource db {
   provider = "sqlserver"
 }
 
+model Usuario {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  senha     String
+  nome      String
+  perfil    String    @default("USER")
+  ativo     Boolean   @default(true)
+  criadoEm  DateTime  @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model Setor {
+  id           Int           @id @default(autoincrement())
+  nome         String        @unique
+  descricao    String?
+  funcionarios Funcionario[]
+}
+
 model Funcionario {
-  id     Int     @id @default(autoincrement())
-  nome   String
-  cargo  String
-  setor  String
-  ativo  Boolean @default(true)
-  status String
+  id              Int              @id @default(autoincrement())
+  nome            String
+  email           String?          @unique
+  cargo           String
+  setor           Setor            @relation(fields: [setorId], references: [id])
+  setorId         Int
+  ativo           Boolean          @default(true)
+  status          String           @default("ATIVO")
+  biometria       String?          @unique
+  entregas        Entrega[]
+  devolucoes      Devolucao[]
+  criadoEm        DateTime         @default(now())
+  atualizadoEm    DateTime         @updatedAt
+
+  @@index([setorId])
+}
+
+model TipoEPI {
+  id            Int             @id @default(autoincrement())
+  nome          String          @unique
+  descricao     String?
+  categoria     String
+  ativo         Boolean         @default(true)
+  epis          EPI[]
+  criadoEm      DateTime        @default(now())
+  atualizadoEm  DateTime        @updatedAt
+}
+
+model EPI {
+  id              Int             @id @default(autoincrement())
+  nome            String
+  tipoEPI         TipoEPI         @relation(fields: [tipoEPIId], references: [id])
+  tipoEPIId       Int
+  ca              String?
+  validadeCA      DateTime?
+  estoqueAtual    Int             @default(0)
+  estoqueMinimo   Int             @default(5)
+  status          String          @default("OK")
+  ativo           Boolean         @default(true)
+  entregas        Entrega[]
+  devolucoes      Devolucao[]
+  criadoEm        DateTime        @default(now())
+  atualizadoEm    DateTime        @updatedAt
+
+  @@index([tipoEPIId])
+}
+
+model Entrega {
+  id              Int         @id @default(autoincrement())
+  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id])
+  funcionarioId   Int
+  epi             EPI         @relation(fields: [epiId], references: [id])
+  epiId           Int
+  quantidade      Int
+  dataEntrega     DateTime    @default(now())
+  observacoes     String?
+  criadoEm        DateTime    @default(now())
+  atualizadoEm    DateTime    @updatedAt
+
+  @@index([funcionarioId])
+  @@index([epiId])
+}
+
+model Devolucao {
+  id              Int         @id @default(autoincrement())
+  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id])
+  funcionarioId   Int
+  epi             EPI         @relation(fields: [epiId], references: [id])
+  epiId           Int
+  quantidade      Int
+  dataDevolucao   DateTime    @default(now())
+  motivo          String?
+  condicao        String?
+  criadoEm        DateTime    @default(now())
+  atualizadoEm    DateTime    @updatedAt
+
+  @@index([funcionarioId])
+  @@index([epiId])
 }

@@ -5,284 +5,255 @@ import table from "./table.module.css";
 
 import SearchBar from "../../components/SearchBar";
 import Modal from "../../components/Modal";
-import BiometriaAuthModal from "../../components/BiometriaAuthModal";
 
-import { entregasMock } from "../../data/entregasMock";
-import { funcionariosMock } from "../../data/funcionarioMock"; // Caminho corrigido para 4 níveis
-
+const API_URL = "http://localhost:3333";
 
 const initialState = {
-  funcionario: {
-    nome: ""
-  },
-  epi: {
-    nome: ""
-  },
+  funcionarioId: "",
+  epiId: "",
   quantidade: 1,
-  dataEntrega: "",
-  responsavel: ""
+  observacoes: ""
 };
 
-function EntregasModal({
-                                        isOpen,
-                                        onClose,
-                                        onSave,
-                                        entrega
-                                      }) {
+function EntregasModal({ isOpen, onClose, onSave, entrega, funcionarios, epis }) {
   const [form, setForm] = useState(initialState);
-  
-  // Controle da Autenticação Biométrica
-  const [showBioAuth, setShowBioAuth] = useState(false);
-  const [currentUserTemplate, setCurrentUserTemplate] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Carrega os dados quando abre o modal para edição
   useEffect(() => {
     if (entrega) {
       setForm(entrega);
     } else {
       setForm(initialState);
     }
-    // Resetar estados auxiliares ao abrir/fechar
-    setShowBioAuth(false);
-    setCurrentUserTemplate(null);
   }, [entrega, isOpen]);
 
   function handleChange(e) {
     const { name, value } = e.target;
-
-    if (name === "nome") {
-      setForm((prev) => ({
-        ...prev,
-        funcionario: { ...prev.funcionario, nome: value }
-      }));
-      return;
-    }
-
-    if (name === "epi.nome") {
-      setForm((prev) => ({
-        ...prev,
-        epi: { ...prev.epi, nome: value }
-      }));
-      return;
-    }
-
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm({
+      ...form,
+      [name]: name === "funcionarioId" || name === "epiId" || name === "quantidade"
+        ? parseInt(value)
+        : value
+    });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    
-    // 1. Busca o funcionário no Mock para ver se tem digital
-    // (Num sistema real, o backend retornaria isso ou o ID viria de um select)
-    const funcionarioEncontrado = funcionariosMock.find(
-        f => f.nome.toLowerCase() === form.funcionario.nome.toLowerCase()
-    );
+    setLoading(true);
+    try {
+      const url = entrega ? `${API_URL}/entregas/${entrega.id}` : `${API_URL}/entregas`;
+      const method = entrega ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
 
-    if (funcionarioEncontrado && funcionarioEncontrado.biometriaTemplate) {
-      // TEM DIGITAL: Exige autenticação
-      setCurrentUserTemplate(funcionarioEncontrado.biometriaTemplate);
-      setShowBioAuth(true);
-    } else {
-      // NÃO TEM DIGITAL ou NÃO ACHOU: Salva direto (ou poderia bloquear)
-      // Aqui vamos permitir salvar mas com um aviso no console
-      console.warn("Funcionário sem digital ou não encontrado. Salvando sem biometria.");
-      finalizarSalvamento();
+      if (!response.ok) throw new Error("Erro ao salvar");
+      
+      await onSave();
+      onClose();
+    } catch (err) {
+      alert("Erro: " + err.message);
+    } finally {
+      setLoading(false);
     }
-  }
-
-  function finalizarSalvamento() {
-    onSave(form);
-    onClose();
-    setShowBioAuth(false);
   }
 
   return (
-      <>
-        {/* Modal Principal de Edição */}
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={entrega ? "Editar Entrega" : "Nova Entrega"}
-        >
-          <form className={modalcss.form} onSubmit={handleSubmit}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={entrega ? "Editar Entrega" : "Nova Entrega"}
+    >
+      <form className={modalcss.form} onSubmit={handleSubmit}>
+        <div className={modalcss.group}>
+          <label>Funcionário</label>
+          <select
+            name="funcionarioId"
+            value={form.funcionarioId || ""}
+            onChange={handleChange}
+            required
+            disabled={loading}
+          >
+            <option value="">Selecione um funcionário</option>
+            {funcionarios && funcionarios.map(f => (
+              <option key={f.id} value={f.id}>
+                {f.nome}
+              </option>
+            ))}
+          </select>
+        </div>
 
-            {/* Grupo Funcionário */}
-            <div className={modalcss.group}>
-              <label>Funcionário</label>
-              <input
-                  name="nome"
-                  placeholder="Nome do Colaborador (Ex: Carlos Souza)"
-                  value={form.funcionario.nome}
-                  onChange={handleChange}
-                  required
-                  list="funcionarios-list" // Datalist para facilitar teste
-              />
-              <datalist id="funcionarios-list">
-                {funcionariosMock.map(f => <option key={f.id} value={f.nome} />)}
-              </datalist>
-            </div>
+        <div className={modalcss.group}>
+          <label>EPI</label>
+          <select
+            name="epiId"
+            value={form.epiId || ""}
+            onChange={handleChange}
+            required
+            disabled={loading}
+          >
+            <option value="">Selecione um EPI</option>
+            {epis && epis.map(e => (
+              <option key={e.id} value={e.id}>
+                {e.nome} (Est. {e.estoqueAtual})
+              </option>
+            ))}
+          </select>
+        </div>
 
-            {/* Grupo EPI */}
-            <div className={modalcss.group}>
-              <label>EPI</label>
-              <input
-                  name="epi.nome"
-                  placeholder="Nome do Equipamento"
-                  value={form.epi.nome}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
+        <div className={modalcss.group}>
+          <label>Quantidade</label>
+          <input
+            type="number"
+            name="quantidade"
+            value={form.quantidade}
+            onChange={handleChange}
+            min="1"
+            required
+            disabled={loading}
+          />
+        </div>
 
-            {/* Grupo Quantidade (Number) */}
-            <div className={modalcss.group}>
-              <label>Quantidade</label>
-              <input
-                  name="quantidade"
-                  type="number"
-                  min="1"
-                  value={form.quantidade}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
+        <div className={modalcss.group}>
+          <label>Observações</label>
+          <textarea
+            name="observacoes"
+            value={form.observacoes || ""}
+            onChange={handleChange}
+            rows="4"
+            disabled={loading}
+          />
+        </div>
 
-            {/* Grupo Data (Date Picker) */}
-            <div className={modalcss.group}>
-              <label>Data da Entrega</label>
-              <input
-                  name="dataEntrega"
-                  type="date"
-                  value={form.dataEntrega}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
-
-            {/* Grupo Responsável */}
-            <div className={modalcss.group}>
-              <label>Responsável pela Entrega</label>
-              <input
-                  name="responsavel"
-                  placeholder="Ex: Almoxarife"
-                  value={form.responsavel}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
-
-            <div className={modalcss.actions}>
-              <button type="button" onClick={onClose}>
-                Cancelar
-              </button>
-              <button type="submit" className={modalcss.primary}>
-                Confirmar Entrega
-              </button>
-            </div>
-          </form>
-        </Modal>
-
-        {/* Modal de Autenticação Biométrica (Overlay) */}
-        <BiometriaAuthModal 
-            isOpen={showBioAuth}
-            onClose={() => setShowBioAuth(false)}
-            onSuccess={finalizarSalvamento}
-            userTemplate={currentUserTemplate}
-            userName={form.funcionario.nome}
-        />
-      </>
+        <div className={modalcss.actions}>
+          <button type="button" onClick={onClose} disabled={loading}>
+            Cancelar
+          </button>
+          <button type="submit" className={modalcss.primary} disabled={loading}>
+            {loading ? "Salvando..." : "Confirmar Entrega"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
-function EntregasTable({ dados = [], onView }) { // Valor padrão para evitar erro se dados for undefined
-
-  // Verifica se a lista está vazia para mostrar mensagem amigável
+function EntregasTable({ dados, onEdit, onDelete, loading }) {
   if (dados.length === 0) {
     return (
-        <div className={table.tableWrapper}>
-          <p className={table.emptyMessage}>Nenhuma entrega encontrada.</p>
-        </div>
+      <div className={table.tableWrapper}>
+        <p className={table.emptyMessage}>Nenhuma entrega encontrada.</p>
+      </div>
     );
   }
 
   return (
-      <div className={table.tableWrapper}>
-        <table>
-          <thead>
+    <div className={table.tableWrapper}>
+      <table>
+        <thead>
           <tr>
             <th>Funcionário</th>
             <th>EPI</th>
             <th>Quantidade</th>
             <th>Data</th>
-            <th>Responsável</th>
+            <th>Observações</th>
             <th>Ações</th>
           </tr>
-          </thead>
+        </thead>
 
-          <tbody>
-          {dados.map((f) => (
-              <tr key={f.id}>
-                {/* O ?. evita erro se o objeto for nulo */}
-                <td>{f.funcionario?.nome || "---"}</td>
-                <td>{f.epi?.nome || "---"}</td>
-                <td>{f.quantidade}</td>
-                {/* Sugestão: Formatar a data para o padrão BR aqui ou no backend */}
-                <td>{f.dataEntrega}</td>
-                <td>{f.responsavel}</td>
-                <td className={table.actions}>
-                  <button className={table.viewBtn} onClick={() => onView(f)}>
-                    Visualizar
-                  </button>
-                </td>
-              </tr>
+        <tbody>
+          {dados.map((entrega) => (
+            <tr key={entrega.id}>
+              <td>{entrega.funcionario?.nome || "N/A"}</td>
+              <td>{entrega.epi?.nome || "N/A"}</td>
+              <td>{entrega.quantidade}</td>
+              <td>{new Date(entrega.dataEntrega).toLocaleDateString()}</td>
+              <td>{entrega.observacoes || "---"}</td>
+              <td className={table.actions}>
+                <button
+                  className={table.editBtn}
+                  onClick={() => onEdit(entrega)}
+                  disabled={loading}
+                >
+                  Editar
+                </button>
+
+                <button
+                  className={table.deleteBtn}
+                  onClick={() => {
+                    if (window.confirm("Tem certeza que deseja excluir?")) {
+                      onDelete(entrega.id);
+                    }
+                  }}
+                  disabled={loading}
+                >
+                  Excluir
+                </button>
+              </td>
+            </tr>
           ))}
-          </tbody>
-        </table>
-      </div>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-
-
 function Entregas() {
-  const [entregas, setEntregas] = useState(entregasMock);
+  const [entregas, setEntregas] = useState([]);
+  const [funcionarios, setFuncionarios] = useState([]);
+  const [epis, setEpis] = useState([]);
+  const [search, setSearch] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [selectedEntrega, setSelectedEntrega] = useState(null);
-  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [entregasRes, funcRes, epiRes] = await Promise.all([
+        fetch(`${API_URL}/entregas`),
+        fetch(`${API_URL}/funcionarios`),
+        fetch(`${API_URL}/epis`)
+      ]);
+
+      setEntregas(await entregasRes.json());
+      setFuncionarios(await funcRes.json());
+      setEpis(await epiRes.json());
+    } catch (err) {
+      alert("Erro ao carregar: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const entregasFiltradas = entregas.filter(e =>
-    e.funcionario.nome.toLowerCase().includes(search.toLowerCase()) ||
-    e.epi.nome.toLowerCase().includes(search.toLowerCase()) ||
-    e.responsavel.toLowerCase().includes(search.toLowerCase())
+    (e.funcionario?.nome || "").toLowerCase().includes(search.toLowerCase()) ||
+    (e.epi?.nome || "").toLowerCase().includes(search.toLowerCase())
   );
 
-
-
-    function handleAdd() {
+  function handleAdd() {
     setSelectedEntrega(null);
     setOpenModal(true);
   }
 
-  function handleEdit(entregas) {
-    setSelectedEntrega(entregas);
+  function handleEdit(entrega) {
+    setSelectedEntrega(entrega);
     setOpenModal(true);
   }
 
-  function handleSave(data) {
-    if (selectedEntrega) {
-      // editar
-      setEntregas(prev =>
-        prev.map(f =>
-          f.id === selectedEntrega.id
-            ? { ...data, id: f.id }
-            : f
-        )
-      );
-    } else {
-      // adicionar
-      setEntregas(prev => [
-        ...prev,
-        { ...data, id: Date.now(), status: "ativo" }
-      ]);
+  async function handleDelete(id) {
+    try {
+      await fetch(`${API_URL}/entregas/${id}`, { method: "DELETE" });
+      loadData();
+    } catch (err) {
+      alert("Erro: " + err.message);
     }
   }
 
@@ -290,28 +261,35 @@ function Entregas() {
     <div className={styles.container}>
       <header className={styles.header}>
         <h1>Entregas</h1>
-        <button className={styles.addBtn} onClick={handleAdd}>
+        <button className={styles.addBtn} onClick={handleAdd} disabled={loading}>
           + Nova Entrega
         </button>
       </header>
 
       <SearchBar value={search} onChange={setSearch} placeholder={"Buscar entrega..."} />
 
-      <EntregasTable
-        dados={entregasFiltradas}
-        onView={handleEdit}
-      />
+      {loading ? (
+        <div className={styles.loading}>Carregando...</div>
+      ) : (
+        <EntregasTable
+          dados={entregasFiltradas}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          loading={loading}
+        />
+      )}
 
       <EntregasModal
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
-        onSave={handleSave}
+        onSave={loadData}
         entrega={selectedEntrega}
+        funcionarios={funcionarios}
+        epis={epis}
       />
     </div>
   );
 }
 
-
-export  {EntregasTable, EntregasModal}
-export default Entregas
+export { EntregasTable, EntregasModal };
+export default Entregas;
