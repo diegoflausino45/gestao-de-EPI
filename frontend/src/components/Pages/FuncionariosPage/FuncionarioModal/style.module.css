@@ -39,3 +39,85 @@
   background: #1e90ff;
   color: #fff;
 }
+
+/* frontend/src/components/Pages/FuncionariosPage/FuncionarioModal/style.module.css */
+
+/* ... Mantenha seus estilos anteriores ... */
+
+.biometriaSection {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.biometriaContainer {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 8px;
+}
+
+.btnBio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  background-color: #007bff; /* Azul padrão */
+  color: white;
+}
+
+.btnBio:hover { background-color: #0056b3; }
+.btnBio:disabled { background-color: #ccc; cursor: not-allowed; }
+
+/* Estados do Botão */
+.btnBio.success { background-color: #28a745; }
+.btnBio.error { background-color: #dc3545; }
+
+/* Animação de Loading */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.bioFeedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.iconSuccess { color: #28a745; }
+.iconError { color: #dc3545; }
+
+/* Preview da Imagem */
+.digitalPreview {
+  margin-top: 10px;
+  text-align: center;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+}
+
+.digitalPreview p {
+  margin: 0 0 5px 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.digitalPreview img {
+  height: 100px; /* Tamanho fixo para não quebrar o modal */
+  width: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}

@@ -7,7 +7,9 @@ export const funcionariosMock = [
     status: "ativo",
     epis: ["Capacete", "Óculos de Proteção"],
     ultimaEntrega: "2024-04-12",
-    ativo: true
+    ativo: true,
+    // Template Mockado válido (formato shape|base64)
+    biometriaTemplate: "500:32|MOCK_DIGITAL_CARLOS_SOUZA_BASE64_STRING_MUITO_LONGA_PARA_SIMULAR_UM_TEMPLATE_REAL..."
   },
   {
     id: 2,
@@ -17,7 +19,8 @@ export const funcionariosMock = [
     status: "ativo",
     epis: ["Luva Nitrílica"],
     ultimaEntrega: "2024-04-10",
-    ativo: true
+    ativo: true,
+    biometriaTemplate: null // Sem digital cadastrada (teste de erro)
   },
   {
     id: 3,
