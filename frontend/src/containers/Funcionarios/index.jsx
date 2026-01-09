@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./styles.module.css";
 
 import SearchBar from "../../components/SearchBar";
@@ -6,10 +6,11 @@ import FuncionariosTable from "../../components/Pages/FuncionariosPage/Funcionar
 import Pagination from "../../components/Pages/FuncionariosPage/Pagination";
 import FuncionarioModal from "../../components/Pages/FuncionariosPage/FuncionarioModal";
 
-import { funcionariosMock } from "../../data/funcionarioMock";
+import { api } from "../../services/api";
+
 
 export default function Funcionarios() {
-  const [funcionarios, setFuncionarios] = useState(funcionariosMock);
+  const [funcionarios, setFuncionarios] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState(null);
   const [search, setSearch] = useState("");
@@ -19,6 +20,18 @@ export default function Funcionarios() {
   f.setor.toLowerCase().includes(search.toLowerCase())
 );
 
+useEffect(() => {
+  async function loadFuncionarios() {
+    try {
+      const response = await api.get("/funcionarios");
+      setFuncionarios(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar funcionários", error);
+    }
+  }
+
+  loadFuncionarios();
+}, []);
 
 
   function inativarFuncionario(id) {
@@ -39,24 +52,33 @@ export default function Funcionarios() {
     setOpenModal(true);
   }
 
-  function handleSave(data) {
+async function handleSave(data) {
+  try {
     if (selectedFuncionario) {
-      // editar
+      // EDITAR (PUT)
+      const response = await api.put(
+        `/funcionarios/${selectedFuncionario.id}`,
+        data
+      );
+
       setFuncionarios(prev =>
         prev.map(f =>
-          f.id === selectedFuncionario.id
-            ? { ...data, id: f.id }
-            : f
+          f.id === selectedFuncionario.id ? response.data : f
         )
       );
     } else {
-      // adicionar
-      setFuncionarios(prev => [
-        ...prev,
-        { ...data, id: Date.now(), status: "ativo" }
-      ]);
+      // CRIAR (POST)
+      const response = await api.post("/funcionarios", data);
+
+      setFuncionarios(prev => [...prev, response.data]);
     }
+
+    setOpenModal(false);
+  } catch (error) {
+    console.error("Erro ao salvar funcionário", error);
+    alert("Erro ao salvar funcionário");
   }
+}
 
 
   return (

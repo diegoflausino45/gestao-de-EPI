@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model Funcionario {
+  id     Int     @id @default(autoincrement())
+  nome   String
+  cargo  String
+  setor  String
+  ativo  Boolean @default(true)
+  status String
+}

@@ -29,7 +29,7 @@ function FuncionariosTable({
               <td>{f.nome}</td>
               <td>{f.cargo}</td>
               <td>{f.setor}</td>
-              <td>{f.epis.join(", ")}</td>
+              <td>{f.epis}</td>
               <td>{f.ultimaEntrega}</td>
               <td className={styles.actions}>
                 <button className={styles.editBtn} onClick={() => onEdit(f)}>
