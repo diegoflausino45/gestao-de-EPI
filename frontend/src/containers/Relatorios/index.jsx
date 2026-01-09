@@ -1,11 +1,60 @@
 import { FiArrowDown } from "react-icons/fi";
-
 import styles from "./styles.module.css";
-import EntregasTable from "../../components/Pages/EntregasPage/EntregasTable";
-import RelatorioTable from "../../components/Pages/RelatoriosPage/RelatoriosTable";
-import EntregasModal from "../../components/Pages/EntregasPage/EntregasModal";
+import relatorio from "./relatorio.module.css";
+
+import { EntregasModal } from "../Entregas";
+import { EntregasTable } from "../Entregas";
+
 import { useState } from "react";
 import { entregasMock } from "../../data/entregasMock";
+
+function RelatorioTable() {
+
+  return (
+    <div className={relatorio.tableWrapper}>
+
+      <div className={relatorio.header}>
+        <h3>Filtros</h3>
+      </div>
+
+      <div className={relatorio.row}>
+        <div className={`${relatorio.field} ${relatorio.periodo}`}>
+          <label>Período</label>
+          <div className={relatorio.periodoInputs}>
+            <input type="date" className={relatorio.date} />
+            <input type="date" className={relatorio.date} />
+          </div>
+        </div>
+      </div>
+
+      <div className={relatorio.row}>
+        <div className={relatorio.field}>
+          <label>Funcionário</label>
+          <select>
+            <option value="">- Selecione -</option>
+            <option>João Silva</option>
+            <option>Maria Souza</option>
+          </select>
+        </div>
+
+        <div className={relatorio.field}>
+          <label>Setor</label>
+          <select>
+            <option value="">- Selecione -</option>
+            <option>Produção</option>
+            <option>Administrativo</option>
+            <option>Logística</option>
+          </select>
+        </div>
+      </div>
+
+      <button className={relatorio.button}>Gerar Relatório</button>
+
+    </div>
+
+  );
+}
+
 
 
 export default function Relatorios() {
