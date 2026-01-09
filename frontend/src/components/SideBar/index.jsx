@@ -9,9 +9,12 @@ import {
 } from "react-icons/fi";
 
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import Styles from "./styles.module.css";
 
 function SideBar() {
+  const { signOut } = useAuth();
+
   return (
     <div className={Styles.sidebar}>
       <div className={Styles.header}>Gestão de EPI's</div>
@@ -24,7 +27,7 @@ function SideBar() {
         <NavItem to="/relatorios" icon={<FiBarChart2 />} label="Relatórios" />
         <NavItem to="/configuracoes" icon={<FiSettings />} label="Configurações" />
 
-        <li className={Styles.logoutButton}>
+        <li className={Styles.logoutButton} onClick={signOut} style={{ cursor: 'pointer' }}>
           <FiLogOut className={Styles.logoutIcon} />
           Sair
         </li>
