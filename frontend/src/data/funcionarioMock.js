@@ -8,8 +8,8 @@ export const funcionariosMock = [
     epis: ["Capacete", "Óculos de Proteção"],
     ultimaEntrega: "2024-04-12",
     ativo: true,
-    // biometria simulada como cadastrada
-    biometriaTemplate: "R1hZV04gREFUQSBGTEFLRS..."
+    // Template Mockado válido (formato shape|base64)
+    biometriaTemplate: "500:32|MOCK_DIGITAL_CARLOS_SOUZA_BASE64_STRING_MUITO_LONGA_PARA_SIMULAR_UM_TEMPLATE_REAL..."
   },
   {
     id: 2,
@@ -20,7 +20,7 @@ export const funcionariosMock = [
     epis: ["Luva Nitrílica"],
     ultimaEntrega: "2024-04-10",
     ativo: true,
-    biometriaTemplate: null //sem digital cadastrada
+    biometriaTemplate: null // Sem digital cadastrada (teste de erro)
   },
   {
     id: 3,
