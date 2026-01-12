@@ -1,6 +1,7 @@
 // src/index.ts
 import express from "express";
 import "dotenv/config";
+import { prisma } from "./db/prisma"; // Importando Prisma client
 
 import { listarEpis, criarEpi } from "./services/epi.service";
 import {
@@ -12,6 +13,7 @@ import {
   listarItensEPNextsi,
   obterSaldosNextsi,
   obterSaldoDetalheNextsi,
+  checkConnection as checkNextsi, // Importando checagem do ERP
   closePool,
 } from "./services/epi-nextsi.service";
 
@@ -207,8 +209,31 @@ app.post("/api/itens/saldos-erp", async (req, res, next) => {
   }
 });
 
-// Health
-app.get("/health", (_req, res) => res.json({ ok: true }));
+// Health Check Deep
+app.get("/health", async (_req, res) => {
+  // Checagem Local (Prisma)
+  let localDb = false;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    localDb = true;
+  } catch (e) {
+    console.error("Health Check Falha Local:", e);
+  }
+
+  // Checagem ERP
+  const erpDb = await checkNextsi();
+
+  const status = localDb && erpDb ? "ok" : "degraded";
+
+  res.status(status === "ok" ? 200 : 503).json({
+    status,
+    timestamp: new Date().toISOString(),
+    services: {
+      database_local: localDb ? "up" : "down",
+      database_erp: erpDb ? "up" : "down",
+    },
+  });
+});
 
 // Error handler central
 app.use(

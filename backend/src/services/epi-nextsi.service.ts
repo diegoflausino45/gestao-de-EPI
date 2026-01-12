@@ -1,12 +1,7 @@
 // src/services/epi-nextsi.service.ts
-/**
- * Serviço para consultar dados do NEXTSI_HOMOLOG diretamente
- * Usa conexão SQL Server direta (sem Prisma) para melhor performance e controle
- */
-
 import sql from "mssql";
 
-const poolPromise = mssql.connect({
+const config = {
   server: process.env.NEXTSI_HOST,
   port: Number(process.env.NEXTSI_PORT ?? 1433),
   user: process.env.NEXTSI_USER,
@@ -16,17 +11,29 @@ const poolPromise = mssql.connect({
     encrypt: true,
     trustServerCertificate: true,
   },
-});
+};
 
 let pool: sql.ConnectionPool | null = null;
 
 async function getPool(): Promise<sql.ConnectionPool> {
   if (!pool) {
+    // @ts-ignore
     pool = new sql.ConnectionPool(config);
     await pool.connect();
     console.log("[NEXTSI] Pool de conexão SQL estabelecido");
   }
   return pool;
+}
+
+export async function checkConnection(): Promise<boolean> {
+  try {
+    const pool = await getPool();
+    await pool.request().query("SELECT 1");
+    return true;
+  } catch (err) {
+    console.error("[NEXTSI] Falha no Healthcheck:", err);
+    return false;
+  }
 }
 
 export async function listarItensEPNextsi() {
