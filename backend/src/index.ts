@@ -4,6 +4,7 @@ import { prisma } from "./db/prisma";
 
 // Controllers & Services
 import { AuthController } from "./controllers/AuthController";
+import { authMiddleware } from "./middlewares/authMiddleware";
 import { criarEpi } from "./services/epi.service";
 import {
   obterSaldoItem,
@@ -49,6 +50,18 @@ app.post("/api/auth/login", authController.login);
  * @desc Cria novo usuário (Uso interno/Admin)
  */
 app.post("/api/auth/register", authController.register);
+
+/**
+ * @route PUT /api/users/profile
+ * @desc Atualiza dados do usuário logado
+ */
+app.put("/api/users/profile", authMiddleware, authController.updateProfile);
+
+/**
+ * @route PATCH /api/users/password
+ * @desc Altera senha do usuário logado
+ */
+app.patch("/api/users/password", authMiddleware, authController.updatePassword);
 
 // =========================================
 // 📦 ROTAS DE EPIs (INTEGRAÇÃO ERP)

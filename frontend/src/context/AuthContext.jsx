@@ -55,8 +55,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  function updateUser(userData) {
+    const updatedUser = { ...user, ...userData };
+    localStorage.setItem('@GestaoEPI:user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  }
+
   return (
-    <AuthContext.Provider value={{ signed: !!user, user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ signed: !!user, user, loading, signIn, signOut, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
