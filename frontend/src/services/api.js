@@ -49,6 +49,25 @@ export const episAPI = {
   delete: (id) => api.delete(`/epis/${id}`)
 };
 
+// Lista todos os EPIs do banco local
+export async function listarEpis() {
+  const { data } = await api.get("/epis");
+  return data;
+}
+ 
+// Consulta de saldos em lote do ERP
+export async function buscarSaldosErp(codigos) {
+  const { data } = await api.post("/epis-erp/saldos", { codigos });
+  // data.dados = [{ codigo, saldoEstoque }]
+  return data.dados;
+}
+ 
+// Consulta saldo de um item específico do ERP
+export async function obterSaldoItem(codigo) {
+  const { data } = await api.get(`/epis-erp/${codigo}`);
+  return data.dados.saldoEstoque;
+}
+
 // ==================== ENTREGAS ====================
 export const entregasAPI = {
   list: () => api.get("/entregas"),

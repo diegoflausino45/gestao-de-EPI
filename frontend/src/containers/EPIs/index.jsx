@@ -170,24 +170,20 @@ function EpiTable({ dados, onEdit, onDelete, loading }) {
       <table>
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Tipo</th>
-            <th>Validade</th>
+            <th>Código</th>
+            <th>Nome/Descrição</th>
+            <th>Categoria</th>
             <th>Estoque</th>
-            <th>Mínimo</th>
-            <th>Status</th>
             <th>Ações</th>
           </tr>
         </thead>
         <tbody>
           {dados.map(f => (
             <tr key={f.id}>
+              <td>{f.codigo}</td>
               <td>{f.nome}</td>
-              <td>{f.tipoEPI?.nome || "N/A"}</td>
-              <td>{f.validadeCA ? new Date(f.validadeCA).toLocaleDateString() : "N/A"}</td>
+              <td>{f.categoria || "N/A"}</td>
               <td>{f.estoqueAtual}</td>
-              <td>{f.estoqueMinimo}</td>
-              <td>{f.status}</td>
               <td className={table.actions}>
                 <button className={table.editBtn} onClick={() => onEdit(f)} disabled={loading}>
                   Editar
@@ -227,12 +223,25 @@ function EPIs() {
   async function loadData() {
     try {
       setLoading(true);
-      const [epiRes, tiposRes] = await Promise.all([
-        fetch(`${API_URL}/epis`),
+      
+      // Carrega EPIs do ERP e tipos locais
+      const [erpRes, tiposRes] = await Promise.all([
+        fetch(`${API_URL}/epis-erp`),
         fetch(`${API_URL}/tipos-epi`)
       ]);
 
-      setEpis(await epiRes.json());
+      const erpData = await erpRes.json();
+      
+      // Mapeia dados do ERP para formato compatível
+      const epis = (erpData.dados || []).map(epi => ({
+        id: epi.codigo,
+        nome: epi.nome,
+        codigo: epi.codigo,
+        categoria: epi.categoria,
+        estoqueAtual: epi.saldoEstoque || 0
+      }));
+      
+      setEpis(epis);
       setTipos(await tiposRes.json());
     } catch (err) {
       alert("Erro ao carregar: " + err.message);
@@ -242,7 +251,9 @@ function EPIs() {
   }
 
   const epiFiltrados = epis.filter(e =>
-    e.nome.toLowerCase().includes(search.toLowerCase())
+    (e.nome && e.nome.toLowerCase().includes(search.toLowerCase())) ||
+    (e.codigo && e.codigo.toLowerCase().includes(search.toLowerCase())) ||
+    (e.categoria && e.categoria.toLowerCase().includes(search.toLowerCase()))
   );
 
   function handleAdd() {
