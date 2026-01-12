@@ -6,17 +6,17 @@
 
 import sql from "mssql";
 
-const config = {
-  server: process.env.NEXTSI_HOST || "APLIC-SERVER",
-  port: Number(process.env.NEXTSI_PORT || 1433),
+const poolPromise = mssql.connect({
+  server: process.env.NEXTSI_HOST,
+  port: Number(process.env.NEXTSI_PORT ?? 1433),
+  user: process.env.NEXTSI_USER,
+  password: process.env.NEXTSI_PASSWORD,
   database: "NEXTSI_HOMOLOG",
-  user: process.env.NEXTSI_USER || "sa",
-  password: process.env.NEXTSI_PASSWORD || "",
   options: {
     encrypt: true,
     trustServerCertificate: true,
   },
-};
+});
 
 let pool: sql.ConnectionPool | null = null;
 
