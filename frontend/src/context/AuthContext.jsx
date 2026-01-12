@@ -1,10 +1,11 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import { api } from '../services/api';
 
 export const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Para checar o token ao carregar a página
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Ao iniciar, verifica se já existe um login salvo
@@ -13,41 +14,44 @@ export function AuthProvider({ children }) {
 
     if (recoveredUser && token) {
       setUser(JSON.parse(recoveredUser));
+      // Configura o token nas requisições do axios para futuras chamadas
+      api.defaults.headers.Authorization = `Bearer ${token}`;
     }
     
     setLoading(false);
   }, []);
 
   async function signIn(email, password) {
-    // --- MOCK DE API ---
-    // Aqui simulamos uma chamada assíncrona ao backend
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            // Regra Mock: Aceita qualquer email com a senha "123456"
-            if (password === '123456') {
-                const mockUser = {
-                    id: 1,
-                    name: 'Administrador',
-                    email: email,
-                    role: 'admin',
-                    avatar: 'https://github.com/shadcn.png' // Avatar placeholder
-                };
+    try {
+      // Chamada real ao backend
+      const response = await api.post('/api/auth/login', {
+        email,
+        password
+      });
 
-                localStorage.setItem('@GestaoEPI:user', JSON.stringify(mockUser));
-                localStorage.setItem('@GestaoEPI:token', 'mock-jwt-token-xyz');
+      const { user: userData, token } = response.data;
 
-                setUser(mockUser);
-                resolve({ success: true });
-            } else {
-                reject({ message: 'E-mail ou senha incorretos.' });
-            }
-        }, 1000); // Delay de 1 segundo para testar loading
-    });
+      localStorage.setItem('@GestaoEPI:user', JSON.stringify(userData));
+      localStorage.setItem('@GestaoEPI:token', token);
+
+      // Injeta o token em todas as chamadas futuras do axios
+      api.defaults.headers.Authorization = `Bearer ${token}`;
+
+      setUser(userData);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Falha na autenticação. Verifique seus dados.';
+      throw new Error(message);
+    }
   }
 
   function signOut() {
     localStorage.removeItem('@GestaoEPI:user');
     localStorage.removeItem('@GestaoEPI:token');
+    
+    // Remove o token do axios
+    api.defaults.headers.Authorization = undefined;
+    
     setUser(null);
   }
 
