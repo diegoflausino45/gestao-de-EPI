@@ -1,5 +1,38 @@
 import app from './app.js'
 
+const PORT = 3333
+
+app.listen(PORT, () => {
+  console.log(`🚀 API rodando em http://localhost:${PORT}`)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //import express from "express"
 
 //import cors from "cors"
@@ -28,9 +61,3 @@ import app from './app.js'
 //    res.status(500).json({ error: "Erro ao buscar funcionários" })
 //  }
 //})
-
-const PORT = 3333
-
-app.listen(PORT, () => {
-  console.log(`🚀 API rodando em http://localhost:${PORT}`)
-})

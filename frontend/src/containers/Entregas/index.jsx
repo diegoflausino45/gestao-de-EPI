@@ -217,15 +217,26 @@ function Entregas() {
   async function loadData() {
     try {
       setLoading(true);
-      const [entregasRes, funcRes, epiRes] = await Promise.all([
+      const [entregasRes, funcRes, erpRes] = await Promise.all([
         fetch(`${API_URL}/entregas`),
         fetch(`${API_URL}/funcionarios`),
-        fetch(`${API_URL}/epis`)
+        fetch(`${API_URL}/epis-erp`)
       ]);
+
+      const erpData = await erpRes.json();
+
+      // Mapeia dados do ERP para formato compatível
+      const epis = (erpData.dados || []).map(epi => ({
+        id: epi.codigo,
+        nome: epi.nome,
+        codigo: epi.codigo,
+        categoria: epi.categoria,
+        estoqueAtual: epi.saldoEstoque || 0
+      }));
 
       setEntregas(await entregasRes.json());
       setFuncionarios(await funcRes.json());
-      setEpis(await epiRes.json());
+      setEpis(epis);
     } catch (err) {
       alert("Erro ao carregar: " + err.message);
     } finally {
