@@ -7,7 +7,7 @@ const api = axios.create({
 
 // Lista todos os EPIs
 export async function listarEpis() {
-  const { data } = await api.get("epis");
+  const { data } = await api.get("/api/epis");
   return data;
 }
 

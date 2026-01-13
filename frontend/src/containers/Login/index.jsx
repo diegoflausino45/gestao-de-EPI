@@ -44,7 +44,6 @@ function Login() {
             setLoading(false);
         }
     }
-  }
 
     return (
         <div className={styles.container}>
@@ -133,71 +132,7 @@ function Login() {
                 }
             `}</style>
         </div>
-
-        {error && <div className={styles.errorMessage}>{error}</div>}
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label className={styles.label} htmlFor="email">
-              E-mail
-            </label>
-            <div className={styles.inputWrapper}>
-              <Mail className={styles.inputIcon} size={18} />
-              <input
-                id="email"
-                type="email"
-                className={styles.input}
-                placeholder="exemplo@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label className={styles.label} htmlFor="password">
-              Senha
-            </label>
-            <div className={styles.inputWrapper}>
-              <Lock className={styles.inputIcon} size={18} />
-              <input
-                id="password"
-                type="password"
-                className={styles.input}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? (
-              "Entrando..."
-            ) : (
-              <>
-                Entrar no Sistema
-                <ArrowRight size={18} />
-              </>
-            )}
-          </button>
-
-          <div
-            style={{
-              textAlign: "center",
-              fontSize: "0.8rem",
-              color: "#888",
-              marginTop: "10px",
-            }}
-          >
-            Dica: Use senha <strong>123456</strong>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+    );
 }
 
 export default Login;
