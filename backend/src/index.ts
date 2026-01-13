@@ -25,9 +25,15 @@ const authController = new AuthController();
 // ✅ Configuração de CORS
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -77,7 +83,7 @@ app.get("/api/epis", async (_req, res, next) => {
   try {
     console.log("🔍 [API] Buscando itens EP do NEXTSI_HOMOLOG...");
     const epis = await listarItensEPNextsi();
-    
+
     // Se não houver itens, retorna array vazio
     if (!epis || epis.length === 0) {
       return res.json([]);
@@ -85,10 +91,10 @@ app.get("/api/epis", async (_req, res, next) => {
 
     // Extrair códigos para buscar saldos em lote
     const codigos = epis.map((e: any) => e.G01_CODIGO);
-    
+
     // Buscar saldos
     const saldosDb = await obterSaldosNextsi(codigos);
-    
+
     // Mapear saldos para acesso rápido (Hash Map)
     const saldosMap = Object.fromEntries(
       saldosDb.map((s: any) => [s.E01_ITEM, s.SaldoTotal])
@@ -106,13 +112,14 @@ app.get("/api/epis", async (_req, res, next) => {
       fabricante: e.G01_FABRICANTE,
       dataNascimento: e.G01_DTNASC,
       observacoes: e.G01_OBSERVACOES,
+      estoqueMinimo:
+        e.G01_PP !== undefined && e.G01_PP !== null ? Number(e.G01_PP) : null, // mapeia o estoque mínimo (G01_PP) vindo do ERP
       estoqueAtual: saldosMap[e.G01_CODIGO] ?? 0,
       status: (saldosMap[e.G01_CODIGO] ?? 0) <= 0 ? "CRÍTICO" : "OK",
     }));
 
     console.log(`✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`);
     return res.json(epicsComSaldo);
-
   } catch (err) {
     // Passa erro para o handler central (não usa mais mock)
     next(err);
@@ -172,21 +179,21 @@ app.get("/api/itens/:codigo/saldo-erp/detalhe", async (req, res, next) => {
 app.post("/api/itens/saldos-erp", async (req, res, next) => {
   try {
     const { codigos } = req.body as { codigos: string[] };
-    
+
     if (!Array.isArray(codigos) || codigos.length === 0) {
       return res
         .status(400)
         .json({ message: 'Informe um array "codigos" com ao menos 1 item.' });
     }
-    
+
     // Busca direta no ERP
     const saldosDb = await obterSaldosNextsi(codigos);
-    
+
     const saldos = saldosDb.map((s: any) => ({
       codigo: s.E01_ITEM,
       saldo: s.SaldoTotal || 0,
     }));
-    
+
     return res.json({ saldos });
   } catch (err) {
     next(err);
