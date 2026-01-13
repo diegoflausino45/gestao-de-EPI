@@ -1,33 +1,33 @@
-// src/index.ts
 import express from "express";
 import "dotenv/config";
+import { prisma } from "./db/prisma";
 
-import { listarEpis, criarEpi } from "./services/epi.service";
+// Controllers & Services
+import { AuthController } from "./controllers/AuthController";
+import { authMiddleware } from "./middlewares/authMiddleware";
+import { criarEpi } from "./services/epi.service";
 import {
   obterSaldoItem,
   listarSaldosDetalhados,
-  obterSaldosPorItens,
 } from "./services/saldo.service";
 import {
   listarItensEPNextsi,
   obterSaldosNextsi,
-  obterSaldoDetalheNextsi,
+  checkConnection as checkNextsi,
   closePool,
 } from "./services/epi-nextsi.service";
 
 import { atualizarEstoqueMinimoNextsi } from "./services/epi-nextsi.service";
 
 const app = express();
+const authController = new AuthController();
 
-// ✅ CORS Configuration
+// ✅ Configuração de CORS
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -37,113 +37,92 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Mock data para teste (remover quando banco estiver configurado)
-const epiMockData = [
-  {
-    id: 1,
-    codigo: "080101.00010",
-    nome: "MASCARA DE SOLDA ESAB A20",
-    tipo: "Proteção Respiratória",
-    descricao: "MASCARA DE SOLDA ESAB A20",
-    CA: "67890",
-    validadeCA: new Date("2027-06-30"),
-    vidaUtilMeses: 24,
-    fabricante: "Protec",
-    estoqueMinimo: 5,
-  },
-  {
-    id: 2,
-    codigo: "080102.00020",
-    nome: "ÓCULOS DE PROTEÇÃO",
-    tipo: "Proteção Visual",
-    descricao: "ÓCULOS DE PROTEÇÃO",
-    CA: "11234",
-    validadeCA: new Date("2025-07-10"),
-    vidaUtilMeses: 36,
-    fabricante: "3M",
-    estoqueMinimo: 20,
-  },
-  {
-    id: 3,
-    codigo: "080103.00030",
-    nome: "LUVA NITRÍLICA",
-    tipo: "Proteção das Mãos",
-    descricao: "LUVA NITRÍLICA",
-    CA: "99887",
-    validadeCA: new Date("2024-12-05"),
-    vidaUtilMeses: 12,
-    fabricante: "Latex",
-    estoqueMinimo: 40,
-  },
-];
+// =========================================
+// 🔐 ROTAS DE AUTENTICAÇÃO
+// =========================================
 
-// Exemplo de rotas já existentes
+/**
+ * @route POST /api/auth/login
+ * @desc Autentica usuário e retorna JWT
+ */
+app.post("/api/auth/login", authController.login);
+
+/**
+ * @route POST /api/auth/register
+ * @desc Cria novo usuário (Uso interno/Admin)
+ */
+app.post("/api/auth/register", authController.register);
+
+/**
+ * @route PUT /api/users/profile
+ * @desc Atualiza dados do usuário logado
+ */
+app.put("/api/users/profile", authMiddleware, authController.updateProfile);
+
+/**
+ * @route PATCH /api/users/password
+ * @desc Altera senha do usuário logado
+ */
+app.patch("/api/users/password", authMiddleware, authController.updatePassword);
+
+// =========================================
+// 📦 ROTAS DE EPIs (INTEGRAÇÃO ERP)
+// =========================================
+
+/**
+ * @route GET /api/epis
+ * @desc Lista todos os EPIs do ERP (G01) combinados com saldo atual (E01)
+ */
 app.get("/api/epis", async (_req, res, next) => {
   try {
-    // Tentar carregar do ERP (G01 - itens EP), se falhar, usar mock
-    try {
-      console.log("🔍 [API] Buscando itens EP do NEXTSI_HOMOLOG...");
-      const epis = await listarItensEPNextsi();
-
-      console.log(`✅ [API] Encontrados ${epis?.length || 0} itens EP`);
-
-      // Se não houver itens, retornar mock
-      if (!epis || epis.length === 0) {
-        console.log("⚠️ Nenhum item EP encontrado no ERP, usando dados mock");
-        return res.json(epiMockData);
-      }
-
-      // Extrair códigos dos itens (G01_CODIGO)
-      const codigos = epis.map((e: any) => e.G01_CODIGO);
-      console.log(`🔍 [API] Buscando saldos para ${codigos.length} itens...`);
-
-      // Buscar saldos dos itens
-      const saldosDb = await obterSaldosNextsi(codigos);
-      console.log(
-        `✅ [API] Encontrados saldos para ${saldosDb?.length || 0} itens`
-      );
-
-      // Mapear saldos para acesso rápido
-      const saldosMap = Object.fromEntries(
-        saldosDb.map((s: any) => [s.E01_ITEM, s.SaldoTotal])
-      );
-
-      // Combinar dados: itens G01 + saldos E01
-      const epicsComSaldo = epis.map((e: any) => ({
-        id: e.G01_ID,
-        codigo: e.G01_CODIGO,
-        nome: e.G01_DESCRICAO,
-        tipo: e.G01_TIPO,
-        descricao: e.G01_DESCRICAO,
-        grupoItem: e.G01_GRUPOITEM,
-        um: e.G01_UM,
-        fabricante: e.G01_FABRICANTE,
-        dataNascimento: e.G01_DTNASC,
-        observacoes: e.G01_OBSERVACOES,
-        estoqueAtual: saldosMap[e.G01_CODIGO] ?? 0,
-        // Se o ERP expõe G01_PP como ponto de pedido / estoque mínimo, usa aqui
-        estoqueMinimo: Number(e.G01_PP) || 0,
-        status:
-          (saldosMap[e.G01_CODIGO] ?? 0) <= (Number(e.G01_PP) || 0)
-            ? "CRÍTICO"
-            : "OK",
-      }));
-
-      console.log(
-        `✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`
-      );
-      return res.json(epicsComSaldo);
-    } catch (dbErr: any) {
-      console.error("❌ [API] Erro ao buscar do ERP:");
-      console.error(dbErr.message || dbErr);
-      console.log("⚠️ Usando dados mock como fallback");
-      return res.json(epiMockData);
+    console.log("🔍 [API] Buscando itens EP do NEXTSI_HOMOLOG...");
+    const epis = await listarItensEPNextsi();
+    
+    // Se não houver itens, retorna array vazio
+    if (!epis || epis.length === 0) {
+      return res.json([]);
     }
+
+    // Extrair códigos para buscar saldos em lote
+    const codigos = epis.map((e: any) => e.G01_CODIGO);
+    
+    // Buscar saldos
+    const saldosDb = await obterSaldosNextsi(codigos);
+    
+    // Mapear saldos para acesso rápido (Hash Map)
+    const saldosMap = Object.fromEntries(
+      saldosDb.map((s: any) => [s.E01_ITEM, s.SaldoTotal])
+    );
+
+    // Combinar dados: Itens G01 + Saldos E01
+    const epicsComSaldo = epis.map((e: any) => ({
+      id: e.G01_ID,
+      codigo: e.G01_CODIGO,
+      nome: e.G01_DESCRICAO,
+      tipo: e.G01_TIPO,
+      descricao: e.G01_DESCRICAO,
+      grupoItem: e.G01_GRUPOITEM,
+      um: e.G01_UM,
+      fabricante: e.G01_FABRICANTE,
+      dataNascimento: e.G01_DTNASC,
+      observacoes: e.G01_OBSERVACOES,
+      estoqueAtual: saldosMap[e.G01_CODIGO] ?? 0,
+      status: (saldosMap[e.G01_CODIGO] ?? 0) <= 0 ? "CRÍTICO" : "OK",
+    }));
+
+    console.log(`✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`);
+    return res.json(epicsComSaldo);
+
   } catch (err) {
+    // Passa erro para o handler central (não usa mais mock)
     next(err);
   }
 });
 
+/**
+ * @route POST /api/epis
+ * @desc Registra um EPI manualmente (Banco Local)
+ */
 app.post("/api/epis", async (req, res, next) => {
   try {
     const novo = await criarEpi(req.body);
@@ -153,7 +132,14 @@ app.post("/api/epis", async (req, res, next) => {
   }
 });
 
-// Saldo total de um item (GET)
+// =========================================
+// 💰 ROTAS DE SALDOS
+// =========================================
+
+/**
+ * @route GET /api/itens/:codigo/saldo-erp
+ * @desc Retorna o saldo total de um item específico
+ */
 app.get("/api/itens/:codigo/saldo-erp", async (req, res, next) => {
   try {
     const codigo = req.params.codigo;
@@ -164,7 +150,10 @@ app.get("/api/itens/:codigo/saldo-erp", async (req, res, next) => {
   }
 });
 
-// (Opcional) Detalhes por local/lote/série (GET)
+/**
+ * @route GET /api/itens/:codigo/saldo-erp/detalhe
+ * @desc Retorna detalhes do saldo (lote, local, série)
+ */
 app.get("/api/itens/:codigo/saldo-erp/detalhe", async (req, res, next) => {
   try {
     const codigo = req.params.codigo;
@@ -175,55 +164,69 @@ app.get("/api/itens/:codigo/saldo-erp/detalhe", async (req, res, next) => {
   }
 });
 
-// ✅ NOVA ROTA: saldos em lote (POST) - Usa ERP
+/**
+ * @route POST /api/itens/saldos-erp
+ * @desc Busca saldos em lote para uma lista de códigos
+ * @body { codigos: string[] }
+ */
 app.post("/api/itens/saldos-erp", async (req, res, next) => {
   try {
     const { codigos } = req.body as { codigos: string[] };
+    
     if (!Array.isArray(codigos) || codigos.length === 0) {
       return res
         .status(400)
         .json({ message: 'Informe um array "codigos" com ao menos 1 item.' });
     }
-
-    // Tentar carregar do ERP (E01), se falhar, usar mock
-    try {
-      // Tenta obter saldos via Prisma (sinônimo dbo.erp_SaldoItens)
-      const saldosDb = await obterSaldosPorItens(codigos);
-
-      // Converter resultado para formato esperado
-      const saldos = (saldosDb || []).map((s: any) => ({
-        codigo: s.codigo ?? s.E01_ITEM,
-        saldo: s.saldo ?? s.SaldoTotal ?? 0,
-      }));
-
-      return res.json({ saldos });
-    } catch (dbErr) {
-      console.log("⚠️ Banco de dados ERP não acessível, usando saldos mock");
-      console.error(dbErr.message);
-
-      // Dados mock de saldos
-      const saldosMock = {
-        "080101.00010": 80,
-        "080102.00020": 45,
-        "080103.00030": 35,
-      };
-
-      const saldos = codigos.map((codigo) => ({
-        codigo,
-        saldo: saldosMock[codigo as keyof typeof saldosMock] ?? 0,
-      }));
-
-      return res.json({ saldos });
-    }
+    
+    // Busca direta no ERP
+    const saldosDb = await obterSaldosNextsi(codigos);
+    
+    const saldos = saldosDb.map((s: any) => ({
+      codigo: s.E01_ITEM,
+      saldo: s.SaldoTotal || 0,
+    }));
+    
+    return res.json({ saldos });
   } catch (err) {
     next(err);
   }
 });
 
-// Health
-app.get("/health", (_req, res) => res.json({ ok: true }));
+// =========================================
+// 🩺 HEALTH CHECK & SYSTEM
+// =========================================
 
-// Error handler central
+/**
+ * @route GET /health
+ * @desc Verifica status do Banco Local e ERP
+ */
+app.get("/health", async (_req, res) => {
+  // 1. Checagem Local (Prisma)
+  let localDb = false;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    localDb = true;
+  } catch (e) {
+    console.error("Health Check Falha Local:", e);
+  }
+
+  // 2. Checagem ERP (Native Driver)
+  const erpDb = await checkNextsi();
+
+  const status = localDb && erpDb ? "ok" : "degraded";
+
+  res.status(status === "ok" ? 200 : 503).json({
+    status,
+    timestamp: new Date().toISOString(),
+    services: {
+      database_local: localDb ? "up" : "down",
+      database_erp: erpDb ? "up" : "down",
+    },
+  });
+});
+
+// Error Handler Centralizado
 app.use(
   (
     err: any,
@@ -244,7 +247,7 @@ const server = app.listen(PORT, () =>
   console.log(`API EPI rodando na porta ${PORT}`)
 );
 
-// Graceful shutdown
+// Graceful Shutdown
 process.on("SIGTERM", async () => {
   console.log("📡 SIGTERM recebido, encerrando gracefully...");
   await closePool();

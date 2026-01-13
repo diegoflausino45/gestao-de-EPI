@@ -1,14 +1,17 @@
-// src/db/prisma-nextsi.ts
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaMssql } from "@prisma/adapter-mssql";
 
-// Usar credenciais específicas para NEXTSI_HOMOLOG (pode ser diferentes)
-const server = process.env.NEXTSI_HOST ?? process.env.SQL_HOST ?? "APLIC-SERVER";
+// Tenta pegar configurações específicas do NEXTSI, senão cai para as globais do SQL
+const server = process.env.NEXTSI_HOST ?? process.env.SQL_HOST;
 const port = Number(process.env.NEXTSI_PORT ?? process.env.SQL_PORT ?? 1433);
-const user = process.env.NEXTSI_USER ?? process.env.SQL_USER ?? "sa";
-const password = process.env.NEXTSI_PASSWORD ?? process.env.SQL_PASSWORD ?? "";
-const database = "NEXTSI_HOMOLOG";
+const database = process.env.NEXTSI_DB ?? "NEXTSI_HOMOLOG"; // Database fixo por padrão
+const user = process.env.NEXTSI_USER ?? process.env.SQL_USER;
+const password = process.env.NEXTSI_PASSWORD ?? process.env.SQL_PASSWORD;
+
+if (!server || !user || !password) {
+  throw new Error("Missing database credentials for NEXTSI integration.");
+}
 
 const config = {
   server,
@@ -22,10 +25,8 @@ const config = {
   },
 };
 
-console.log(`[Prisma NEXTSI] Conectando a ${server}:${port}/${database} com usuário ${user}`);
-
-// Adapter para usar o driver mssql com Prisma
 const adapter = new PrismaMssql(config);
 
-// Prisma Client tipado para NEXTSI_HOMOLOG
+console.log(`[Prisma NEXTSI] Conectando a ${server}:${port}/${database} com usuário ${user}`);
+
 export const prismaNextsi = new PrismaClient({ adapter });

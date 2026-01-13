@@ -21,6 +21,8 @@ import Breadcrumb from "../components/Breadcrumb"
 import ScrollToTop from "../components/ScrollToTop"
 
 import { AuthProvider, useAuth } from "../context/AuthContext"
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Componente de Layout Protegido (Com Sidebar e Header)
 function PrivateLayout() {
@@ -36,17 +38,18 @@ function PrivateLayout() {
     }
 
     return (
-        <>
-            <Header />
-            <div className={Styles.contenteside}>
-                <ScrollToTop />
-                <SideBar />
-                <Breadcrumb />
-                <div className={Styles.content}>
+        <div className={Styles.layoutContainer}>
+            <SideBar />
+            
+            <div className={Styles.mainContent}>
+                <Header />
+                <div className={Styles.pageContent}>
+                    <Breadcrumb />
                     <Outlet /> {/* Aqui renderiza os filhos (Home, Funcionarios...) */}
                 </div>
+                <ScrollToTop />
             </div>
-        </>
+        </div>
     );
 }
 
@@ -93,6 +96,18 @@ function AppRouter() {
                     {/* Rota 404 fica fora para aparecer em qualquer caso ou pode ter layout próprio */}
                     <Route path="*" element={<NotFound />} />
                 </Routes>
+                <ToastContainer 
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="colored"
+                />
             </BrowserRouter>
         </AuthProvider>
     )
