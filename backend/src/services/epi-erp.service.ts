@@ -37,7 +37,6 @@ export async function listarItensEP() {
 
   return epis;
 }
-
 /**
  * Busca saldos de itens no ERP
  * Fonte: NEXTSI_HOMOLOG.dbo.E01
