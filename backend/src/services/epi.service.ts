@@ -1,5 +1,5 @@
 // src/services/epi.service.ts
-import { prisma } from "../db/prisma";
+import { prisma } from "../db/prisma.js";
 
 export async function listarEpis() {
   return prisma.epi.findMany();

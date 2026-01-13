@@ -203,6 +203,14 @@ app.post("/api/itens/saldos-erp", async (req, res, next) => {
 // =========================================
 // 🩺 HEALTH CHECK & SYSTEM
 // =========================================
+// src/index.ts
+import "dotenv/config";
+import express from "express"
+
+import app from "./app.js";
+import {closePool,} from "./services/EpiERP.service.js";
+
+
 
 /**
  * @route GET /health
@@ -254,7 +262,9 @@ const server = app.listen(PORT, () =>
   console.log(`API EPI rodando na porta ${PORT}`)
 );
 
-// Graceful Shutdown
+
+
+// Graceful shutdown
 process.on("SIGTERM", async () => {
   console.log("📡 SIGTERM recebido, encerrando gracefully...");
   await closePool();
