@@ -27,7 +27,8 @@ export default function EPIs() {
         (e.nome && e.nome.toLowerCase().includes(search.toLowerCase())) ||
         (e.tipo && e.tipo.toLowerCase().includes(search.toLowerCase())) ||
         (e.codigo && e.codigo.toLowerCase().includes(search.toLowerCase())) ||
-        (e.descricao && e.descricao.toLowerCase().includes(search.toLowerCase()))
+        (e.descricao &&
+          e.descricao.toLowerCase().includes(search.toLowerCase()))
     );
     setEpiFiltrados(filtrados);
   }, [search, epi]);
@@ -40,13 +41,14 @@ export default function EPIs() {
       // Carrega EPIs com saldos já combinados do backend
       // Backend retorna: { codigo, nome, tipo, estoqueAtual, status, ... }
       const epis = await listarEpis();
-      
+
       // Dados já vêm do backend com saldos + status calculados
       setEpi(epis);
     } catch (err) {
       console.error("Erro ao carregar EPIs:", err);
       setError(
-        err.message || "Erro ao carregar EPIs. Verifique a conexão com o backend."
+        err.message ||
+          "Erro ao carregar EPIs. Verifique a conexão com o backend."
       );
     } finally {
       setLoading(false);
