@@ -19,19 +19,23 @@ function SideBar() {
     <div className={Styles.sidebar}>
       <div className={Styles.header}>Gestão de EPI's</div>
 
-      <ul className={Styles.menu}>
-        <NavItem to="/" icon={<FiHome />} label="Dashboard" />
-        <NavItem to="/funcionarios" icon={<FiUsers />} label="Funcionários" />
-        <NavItem to="/epis" icon={<FiBox />} label="EPI's" />
-        <NavItem to="/entregas" icon={<FiTruck />} label="Entregas" />
-        <NavItem to="/relatorios" icon={<FiBarChart2 />} label="Relatórios" />
-        <NavItem to="/configuracoes" icon={<FiSettings />} label="Configurações" />
+      <nav style={{ flex: 1, overflowY: 'auto' }}>
+        <ul className={Styles.menu}>
+          <NavItem to="/" icon={<FiHome />} label="Dashboard" />
+          <NavItem to="/funcionarios" icon={<FiUsers />} label="Funcionários" />
+          <NavItem to="/epis" icon={<FiBox />} label="EPI's" />
+          <NavItem to="/entregas" icon={<FiTruck />} label="Entregas" />
+          <NavItem to="/relatorios" icon={<FiBarChart2 />} label="Relatórios" />
+          <NavItem to="/configuracoes" icon={<FiSettings />} label="Configurações" />
+        </ul>
+      </nav>
 
-        <li className={Styles.logoutButton} onClick={signOut} style={{ cursor: 'pointer' }}>
+      <div className={Styles.logoutContainer}>
+        <button className={Styles.logoutButton} onClick={signOut}>
           <FiLogOut className={Styles.logoutIcon} />
-          Sair
-        </li>
-      </ul>
+          Sair do Sistema
+        </button>
+      </div>
     </div>
   );
 }

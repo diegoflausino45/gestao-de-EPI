@@ -1,9 +1,21 @@
-.contenteside{
+/* Layout Principal */
+.layoutContainer {
     display: flex;
-    flex-direction: column;
-    margin-left: 20%;
+    min-height: 100vh;
+    background-color: #f3f4f6; /* Fundo cinza claro global */
 }
 
-.content{
-    margin: 20px;
+/* Área à direita da Sidebar (Header + Conteúdo) */
+.mainContent {
+    flex: 1;
+    margin-left: 250px; /* Mesma largura da Sidebar */
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Impede overflow horizontal flexbox */
+}
+
+/* Conteúdo da Página (com padding) */
+.pageContent {
+    padding: 2rem;
+    flex: 1;
 }

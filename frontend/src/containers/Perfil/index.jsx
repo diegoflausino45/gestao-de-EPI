@@ -4,6 +4,7 @@ import dadosPessoais from "./dadosPessoais.module.css";
 import { FiUser, FiLock, FiCheck, FiX } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
+import { toast } from "react-toastify";
 
 function DadosPessoais() {
   const { user, updateUser } = useAuth();
@@ -27,7 +28,7 @@ function DadosPessoais() {
 
   const handleUpdateProfile = async () => {
     if (!nome || !email) {
-      alert("Nome e e-mail são obrigatórios.");
+      toast.warning("Nome e e-mail são obrigatórios.");
       return;
     }
 
@@ -36,10 +37,10 @@ function DadosPessoais() {
       const response = await api.put('/api/users/profile', { nome, email });
       updateUser(response.data);
       setIsEditing(false);
-      alert("Perfil atualizado com sucesso!");
+      toast.success("Perfil atualizado com sucesso!");
     } catch (error) {
       const message = error.response?.data?.message || "Erro ao atualizar dados.";
-      alert(message);
+      toast.error(message);
     } finally {
       setLoadingProfile(false);
     }
@@ -47,17 +48,17 @@ function DadosPessoais() {
 
   const handleChangePassword = async () => {
     if (!senhaAtual || !novaSenha || !confirmarSenha) {
-      alert("Preencha todos os campos de senha.");
+      toast.warning("Preencha todos os campos de senha.");
       return;
     }
 
     if (novaSenha !== confirmarSenha) {
-      alert("A nova senha e a confirmação não coincidem.");
+      toast.error("A nova senha e a confirmação não coincidem.");
       return;
     }
 
     if (novaSenha.length < 6) {
-      alert("A nova senha deve ter pelo menos 6 caracteres.");
+      toast.info("A nova senha deve ter pelo menos 6 caracteres.");
       return;
     }
     
@@ -67,10 +68,10 @@ function DadosPessoais() {
       setSenhaAtual("");
       setNovaSenha("");
       setConfirmarSenha("");
-      alert("Senha alterada com sucesso!");
+      toast.success("Senha alterada com sucesso!");
     } catch (error) {
       const message = error.response?.data?.message || "Erro ao alterar senha. Verifique a senha atual.";
-      alert(message);
+      toast.error(message);
     } finally {
       setLoadingPassword(false);
     }

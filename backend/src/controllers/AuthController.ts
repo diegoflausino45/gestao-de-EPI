@@ -146,12 +146,10 @@ export class AuthController {
   async updatePassword(req: any, res: Response, next: NextFunction) {
     try {
       const { senhaAtual, novaSenha } = req.body;
-      const userId = req.user.id;
+      const userId = Number(req.user?.id);
 
-      console.log(`[UpdatePassword] Iniciando troca para UserID: ${userId}`);
-
-      if (!senhaAtual || !novaSenha) {
-        return res.status(400).json({ message: "Senha atual e nova senha são obrigatórias." });
+      if (!userId || !senhaAtual || !novaSenha) {
+        return res.status(400).json({ message: "Dados incompletos para alteração de senha." });
       }
 
       // 1. Buscar usuário para validar a senha atual
@@ -160,16 +158,14 @@ export class AuthController {
       });
 
       if (!user) {
-        console.log(`[UpdatePassword] Usuário não encontrado no DB.`);
         return res.status(404).json({ message: "Usuário não encontrado." });
       }
 
       // 2. Verificar senha atual
       const isPasswordValid = await bcrypt.compare(senhaAtual, user.senha);
-      console.log(`[UpdatePassword] Senha atual válida? ${isPasswordValid}`);
 
       if (!isPasswordValid) {
-        return res.status(401).json({ message: "Senha atual incorreta." });
+        return res.status(401).json({ message: "A senha atual informada está incorreta." });
       }
 
       // 3. Hash da nova senha e salvar
@@ -180,10 +176,8 @@ export class AuthController {
         data: { senha: hashedNewPassword },
       });
 
-      console.log(`[UpdatePassword] Senha atualizada com sucesso.`);
       return res.json({ message: "Senha atualizada com sucesso." });
     } catch (error) {
-      console.error(`[UpdatePassword] Erro:`, error);
       next(error);
     }
   }
