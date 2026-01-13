@@ -1,40 +1,73 @@
 import { useEffect, useState } from "react";
 import Modal from "../../../Modal";
 import styles from "./style.module.css";
+import { atualizarEstoqueMinimo } from "../../../../services/epiApi";
 
 const initialState = {
+  codigo: "",
   nome: "",
-  categoria: "",
+  tipo: "",
   ca: "",
   validadeCA: "",
   estoqueAtual: 0,
   estoqueMinimo: 0,
-  status: "OK"
+  status: "OK",
 };
 
-export default function EpiModal({
-  isOpen,
-  onClose,
-  onSave,
-  epi
-}) {
+export default function EpiModal({ isOpen, onClose, onSave, epi }) {
   const [form, setForm] = useState(initialState);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (epi) {
-      setForm(epi);
+      // Garantir que tenhamos as chaves esperadas
+      setForm({ ...initialState, ...epi });
     } else {
       setForm(initialState);
     }
   }, [epi]);
+
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    onSave(form);
-    onClose();
+    setError(null);
+    try {
+      setSaving(true);
+
+      // Normalizar valor numérico
+      const novoPP = parseFloat(String(form.estoqueMinimo || "0"));
+      if (!isFinite(novoPP) || novoPP < 0) {
+        setError("Valor inválido para Estoque Mínimo");
+        setSaving(false);
+        return;
+      }
+
+      // Chama a API para atualizar no NEXTSI e usa o retorno para atualizar status/estoque
+      const resp = await atualizarEstoqueMinimo(form.codigo, novoPP);
+
+      // Notifica o pai para atualizar a lista (onSave espera o objeto atualizado)
+      if (typeof onSave === "function") {
+        const updated = {
+          ...form,
+          estoqueMinimo: novoPP,
+          estoqueAtual: resp.estoqueAtual ?? form.estoqueAtual,
+          status: resp.status ?? form.status,
+        };
+        onSave(updated);
+      }
+
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -45,22 +78,31 @@ export default function EpiModal({
     >
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.group}>
+          <label>Codigo</label>
+          <input
+            name="codigo"
+            value={form.codigo}
+            onChange={handleChange}
+            readOnly
+          />
+        </div>
+        <div className={styles.group}>
           <label>Nome</label>
           <input
             name="nome"
             value={form.nome}
             onChange={handleChange}
-            required
+            readOnly
           />
         </div>
 
         <div className={styles.group}>
           <label>Tipo</label>
           <input
-            name="categoria"
-            value={form.categoria}
+            name="tipo"
+            value={form.tipo}
             onChange={handleChange}
-            required
+            readOnly
           />
         </div>
 
@@ -79,6 +121,7 @@ export default function EpiModal({
             name="estoqueAtual"
             value={form.estoqueAtual}
             onChange={handleChange}
+            readOnly
           />
         </div>
 
@@ -91,12 +134,14 @@ export default function EpiModal({
           />
         </div>
 
+        {error && <div className={styles.formError}>{error}</div>}
+
         <div className={styles.actions}>
-          <button type="button" onClick={onClose}>
+          <button type="button" onClick={onClose} disabled={saving}>
             Cancelar
           </button>
-          <button type="submit" className={styles.primary}>
-            Salvar
+          <button type="submit" className={styles.primary} disabled={saving}>
+            {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </form>

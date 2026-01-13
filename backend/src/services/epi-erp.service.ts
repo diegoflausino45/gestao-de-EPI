@@ -17,6 +17,7 @@ export async function listarItensEP() {
       G01_FABRICANTE?: string | null;
       G01_DTNASC?: Date | null;
       G01_OBSERVACOES?: string | null;
+      G01_PP?: string | null;
     }[]
   >`
     SELECT 
@@ -28,7 +29,8 @@ export async function listarItensEP() {
       G01_UM,
       G01_FABRICANTE,
       G01_DTNASC,
-      G01_OBSERVACOES
+      G01_OBSERVACOES,
+      G01_PP
     FROM dbo.G01
     WHERE G01_TIPO = 'EP'
       AND G01_EXCLUIDO = 'N'

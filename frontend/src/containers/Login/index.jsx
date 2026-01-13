@@ -45,16 +45,15 @@ function Login() {
         }
     }
 
-    return (
-        <div className={styles.container}>
-            <div className={styles.loginCard}>
-                <div className={styles.header}>
-                    <div className={styles.logo}>
-                        <ShieldCheck size={32} />
-                    </div>
-                    <h1 className={styles.title}>Bem-vindo de volta</h1>
-                    <p className={styles.subtitle}>Acesse o sistema de Gestão de EPIs</p>
-                </div>
+    try {
+      await signIn(email, password);
+      navigate("/"); // Redireciona para Home após sucesso
+    } catch (err) {
+      setError(err.message || "Erro ao tentar fazer login.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.inputGroup}>

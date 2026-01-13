@@ -17,6 +17,8 @@ import {
   closePool,
 } from "./services/epi-nextsi.service";
 
+import { atualizarEstoqueMinimoNextsi } from "./services/epi-nextsi.service";
+
 const app = express();
 const authController = new AuthController();
 
@@ -29,7 +31,7 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-  
+
   next();
 });
 
@@ -241,7 +243,9 @@ app.use(
 );
 
 const PORT = process.env.PORT ?? 4000;
-const server = app.listen(PORT, () => console.log(`API EPI rodando na porta ${PORT}`));
+const server = app.listen(PORT, () =>
+  console.log(`API EPI rodando na porta ${PORT}`)
+);
 
 // Graceful Shutdown
 process.on("SIGTERM", async () => {
@@ -260,4 +264,44 @@ process.on("SIGINT", async () => {
     console.log("✅ Servidor encerrado");
     process.exit(0);
   });
+});
+
+// Atualiza estoque mínimo (G01_PP) no NEXTSI (atenção: requer permissão de escrita no DB NEXTSI)
+app.put("/api/itens/:codigo/estoque-minimo", async (req, res, next) => {
+  try {
+    const codigo = req.params.codigo;
+    const { estoqueMinimo } = req.body as { estoqueMinimo: string | number };
+
+    if (estoqueMinimo === undefined || estoqueMinimo === null) {
+      return res
+        .status(400)
+        .json({ message: "Informe 'estoqueMinimo' no body." });
+    }
+
+    // validação simples e conversão para number (DECIMAL)
+    const valor = Number(estoqueMinimo);
+    if (!isFinite(valor) || valor < 0) {
+      return res.status(400).json({ message: "estoqueMinimo inválido" });
+    }
+
+    await atualizarEstoqueMinimoNextsi(codigo, valor);
+
+    // Recalcula saldo atual para esse item e determina status
+    try {
+      const saldoAtual = await obterSaldoItem(codigo);
+      const status = (saldoAtual ?? 0) <= valor ? "CRÍTICO" : "OK";
+      return res.json({
+        codigo,
+        estoqueMinimo: valor,
+        estoqueAtual: saldoAtual,
+        status,
+      });
+    } catch (errSaldo) {
+      // Se não for possível calcular o saldo, retorna pelo menos o estoqueMinimo
+      console.error("Erro ao recalcular saldo após atualização:", errSaldo);
+      return res.json({ codigo, estoqueMinimo: valor });
+    }
+  } catch (err) {
+    next(err);
+  }
 });

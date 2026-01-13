@@ -7,7 +7,7 @@ const api = axios.create({
 
 // Lista todos os EPIs
 export async function listarEpis() {
-  const { data } = await api.get("/api/epis");
+  const { data } = await api.get("epis");
   return data;
 }
 
@@ -22,4 +22,14 @@ export async function buscarSaldosErp(codigos: string[]) {
 export async function obterSaldoItem(codigo: string) {
   const { data } = await api.get(`/api/itens/${codigo}/saldo-erp`);
   return data.saldo as number;
+}
+
+export async function atualizarEstoqueMinimo(codigo, estoqueMinimo) {
+  // garantir número
+  const body = { estoqueMinimo: Number(estoqueMinimo) };
+  const { data } = await api.put(
+    `/api/itens/${encodeURIComponent(codigo)}/estoque-minimo`,
+    body
+  );
+  return data;
 }
