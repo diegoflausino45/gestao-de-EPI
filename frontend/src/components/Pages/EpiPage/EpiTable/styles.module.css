@@ -109,3 +109,15 @@ tbody tr:hover {
   display: flex;
   gap: 8px;
 }
+
+.estoque {
+  text-align: center;
+  font-weight: 600;
+}
+/* (Opcional) centraliza o cabeçalho da coluna 'Estoque Atual' */
+thead th:nth-child(5) {
+  text-align: center;
+}
+.validadeCA {
+  text-align: center;
+}

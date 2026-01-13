@@ -32,9 +32,7 @@ async function getPool(): Promise<sql.ConnectionPool> {
 export async function listarItensEPNextsi() {
   try {
     const pool = await getPool();
-    const result = await pool
-      .request()
-      .query(`
+    const result = await pool.request().query(`
         SELECT TOP 500
           G01_ID,
           G01_CODIGO,
@@ -44,7 +42,8 @@ export async function listarItensEPNextsi() {
           G01_UM,
           G01_FABRICANTE,
           G01_DTNASC,
-          G01_OBSERVACOES
+          G01_OBSERVACOES,
+          G01_PP -- Estoque mínimo/PP (proposto) vindo do ERP
         FROM dbo.G01
         WHERE G01_TIPO = 'EP'
           AND G01_EXCLUIDO = 'N'
@@ -90,9 +89,7 @@ export async function obterSaldosNextsi(codigos: string[]) {
 export async function obterSaldoDetalheNextsi(codigo: string) {
   try {
     const pool = await getPool();
-    const result = await pool
-      .request()
-      .input("codigo", sql.VarChar(50), codigo)
+    const result = await pool.request().input("codigo", sql.VarChar(50), codigo)
       .query(`
         SELECT 
           E01_ITEM,
@@ -120,5 +117,27 @@ export async function closePool() {
     await pool.close();
     pool = null;
     console.log("[NEXTSI] Pool de conexão fechado");
+  }
+}
+
+// Atualiza o campo G01_PP (estoque mínimo / ponto de pedido) no NEXTSI
+export async function atualizarEstoqueMinimoNextsi(
+  codigo: string,
+  novoPP: number
+) {
+  try {
+    const pool = await getPool();
+    await pool
+      .request()
+      .input("codigo", sql.VarChar(50), codigo)
+      .input("pp", sql.Decimal(18, 4), novoPP).query(`
+        UPDATE dbo.G01
+        SET G01_PP = @pp
+        WHERE G01_CODIGO = @codigo
+      `);
+    return { ok: true };
+  } catch (err) {
+    console.error("[NEXTSI] Erro ao atualizar G01_PP:", err);
+    throw err;
   }
 }

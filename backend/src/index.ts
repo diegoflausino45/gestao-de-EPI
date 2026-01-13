@@ -15,18 +15,23 @@ import {
   closePool,
 } from "./services/epi-nextsi.service";
 
+import { atualizarEstoqueMinimoNextsi } from "./services/epi-nextsi.service";
+
 const app = express();
 
 // ✅ CORS Configuration
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-  
+
   next();
 });
 
@@ -79,9 +84,9 @@ app.get("/api/epis", async (_req, res, next) => {
     try {
       console.log("🔍 [API] Buscando itens EP do NEXTSI_HOMOLOG...");
       const epis = await listarItensEPNextsi();
-      
+
       console.log(`✅ [API] Encontrados ${epis?.length || 0} itens EP`);
-      
+
       // Se não houver itens, retornar mock
       if (!epis || epis.length === 0) {
         console.log("⚠️ Nenhum item EP encontrado no ERP, usando dados mock");
@@ -94,8 +99,10 @@ app.get("/api/epis", async (_req, res, next) => {
 
       // Buscar saldos dos itens
       const saldosDb = await obterSaldosNextsi(codigos);
-      console.log(`✅ [API] Encontrados saldos para ${saldosDb?.length || 0} itens`);
-      
+      console.log(
+        `✅ [API] Encontrados saldos para ${saldosDb?.length || 0} itens`
+      );
+
       // Mapear saldos para acesso rápido
       const saldosMap = Object.fromEntries(
         saldosDb.map((s: any) => [s.E01_ITEM, s.SaldoTotal])
@@ -114,12 +121,17 @@ app.get("/api/epis", async (_req, res, next) => {
         dataNascimento: e.G01_DTNASC,
         observacoes: e.G01_OBSERVACOES,
         estoqueAtual: saldosMap[e.G01_CODIGO] ?? 0,
-        estoqueMinimo: 0, // G01 não tem estoqueMinimo, pode ser adicionado depois
+        // Se o ERP expõe G01_PP como ponto de pedido / estoque mínimo, usa aqui
+        estoqueMinimo: Number(e.G01_PP) || 0,
         status:
-          (saldosMap[e.G01_CODIGO] ?? 0) <= 0 ? "CRÍTICO" : "OK",
+          (saldosMap[e.G01_CODIGO] ?? 0) <= (Number(e.G01_PP) || 0)
+            ? "CRÍTICO"
+            : "OK",
       }));
 
-      console.log(`✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`);
+      console.log(
+        `✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`
+      );
       return res.json(epicsComSaldo);
     } catch (dbErr: any) {
       console.error("❌ [API] Erro ao buscar do ERP:");
@@ -172,34 +184,35 @@ app.post("/api/itens/saldos-erp", async (req, res, next) => {
         .status(400)
         .json({ message: 'Informe um array "codigos" com ao menos 1 item.' });
     }
-    
+
     // Tentar carregar do ERP (E01), se falhar, usar mock
     try {
-      const saldosDb = await obterSaldosItensERP(codigos);
-      
+      // Tenta obter saldos via Prisma (sinônimo dbo.erp_SaldoItens)
+      const saldosDb = await obterSaldosPorItens(codigos);
+
       // Converter resultado para formato esperado
-      const saldos = saldosDb.map((s) => ({
-        codigo: s.E01_ITEM,
-        saldo: s.SaldoTotal || 0,
+      const saldos = (saldosDb || []).map((s: any) => ({
+        codigo: s.codigo ?? s.E01_ITEM,
+        saldo: s.saldo ?? s.SaldoTotal ?? 0,
       }));
-      
+
       return res.json({ saldos });
     } catch (dbErr) {
       console.log("⚠️ Banco de dados ERP não acessível, usando saldos mock");
       console.error(dbErr.message);
-      
+
       // Dados mock de saldos
       const saldosMock = {
         "080101.00010": 80,
         "080102.00020": 45,
         "080103.00030": 35,
       };
-      
+
       const saldos = codigos.map((codigo) => ({
         codigo,
         saldo: saldosMock[codigo as keyof typeof saldosMock] ?? 0,
       }));
-      
+
       return res.json({ saldos });
     }
   } catch (err) {
@@ -227,7 +240,9 @@ app.use(
 );
 
 const PORT = process.env.PORT ?? 4000;
-const server = app.listen(PORT, () => console.log(`API EPI rodando na porta ${PORT}`));
+const server = app.listen(PORT, () =>
+  console.log(`API EPI rodando na porta ${PORT}`)
+);
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
@@ -246,4 +261,44 @@ process.on("SIGINT", async () => {
     console.log("✅ Servidor encerrado");
     process.exit(0);
   });
+});
+
+// Atualiza estoque mínimo (G01_PP) no NEXTSI (atenção: requer permissão de escrita no DB NEXTSI)
+app.put("/api/itens/:codigo/estoque-minimo", async (req, res, next) => {
+  try {
+    const codigo = req.params.codigo;
+    const { estoqueMinimo } = req.body as { estoqueMinimo: string | number };
+
+    if (estoqueMinimo === undefined || estoqueMinimo === null) {
+      return res
+        .status(400)
+        .json({ message: "Informe 'estoqueMinimo' no body." });
+    }
+
+    // validação simples e conversão para number (DECIMAL)
+    const valor = Number(estoqueMinimo);
+    if (!isFinite(valor) || valor < 0) {
+      return res.status(400).json({ message: "estoqueMinimo inválido" });
+    }
+
+    await atualizarEstoqueMinimoNextsi(codigo, valor);
+
+    // Recalcula saldo atual para esse item e determina status
+    try {
+      const saldoAtual = await obterSaldoItem(codigo);
+      const status = (saldoAtual ?? 0) <= valor ? "CRÍTICO" : "OK";
+      return res.json({
+        codigo,
+        estoqueMinimo: valor,
+        estoqueAtual: saldoAtual,
+        status,
+      });
+    } catch (errSaldo) {
+      // Se não for possível calcular o saldo, retorna pelo menos o estoqueMinimo
+      console.error("Erro ao recalcular saldo após atualização:", errSaldo);
+      return res.json({ codigo, estoqueMinimo: valor });
+    }
+  } catch (err) {
+    next(err);
+  }
 });
