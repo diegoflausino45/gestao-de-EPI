@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Download, Filter, Search, ChevronDown, FileText, Printer } from "lucide-react";
+import { Download, Filter, Search, ChevronDown, FileText, Printer, Eye, X, User, Package, Calendar, ShieldCheck } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import styles from "./styles.module.css";
 import relatorioStyles from "./relatorio.module.css";
+import modalStyles from "./modal.module.css";
 
 // Importando Mock (ou definindo um expandido aqui para testes)
 import { relatorioMock } from "../../data/relatorioMock";
@@ -29,6 +30,9 @@ export default function Relatorios() {
   // Estado para controlar o menu dropdown
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const exportMenuRef = useRef(null);
+  
+  // Estado para o Modal de Detalhes
+  const [selectedMovimentacao, setSelectedMovimentacao] = useState(null);
 
   // Fechar o menu se clicar fora
   useEffect(() => {
@@ -307,6 +311,7 @@ export default function Relatorios() {
                     <th>EPI</th>
                     <th>Qtd</th>
                     <th>Status</th>
+                    <th style={{width: '60px'}}></th> {/* Coluna de Ações */}
                 </tr>
             </thead>
             <tbody>
@@ -326,11 +331,20 @@ export default function Relatorios() {
                             <td>
                                 <StatusBadge status={item.status} />
                             </td>
+                            <td>
+                                <button 
+                                  className={relatorioStyles.actionBtn}
+                                  onClick={() => setSelectedMovimentacao(item)}
+                                  title="Ver Detalhes"
+                                >
+                                  <Eye size={18} />
+                                </button>
+                            </td>
                         </tr>
                     ))
                 ) : (
                     <tr>
-                        <td colSpan="7" style={{textAlign: 'center', padding: '32px', color: '#999'}}>
+                        <td colSpan="8" style={{textAlign: 'center', padding: '32px', color: '#999'}}>
                             Nenhum registro encontrado para os filtros selecionados.
                         </td>
                     </tr>
@@ -338,6 +352,84 @@ export default function Relatorios() {
             </tbody>
         </table>
       </div>
+
+      {/* --- MODAL DE DETALHES --- */}
+      {selectedMovimentacao && (
+        <div className={modalStyles.overlay} onClick={() => setSelectedMovimentacao(null)}>
+          <div className={modalStyles.modal} onClick={e => e.stopPropagation()}>
+            <div className={modalStyles.header}>
+              <div>
+                <h2>Detalhes da Movimentação</h2>
+                <span className={modalStyles.idBadge}>#{selectedMovimentacao.id}</span>
+              </div>
+              <button className={modalStyles.closeBtn} onClick={() => setSelectedMovimentacao(null)}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className={modalStyles.body}>
+              {/* Status Banner */}
+              <div className={`${modalStyles.statusBanner} ${selectedMovimentacao.tipo === 'DEVOLUCAO' ? modalStyles.devolucao : modalStyles.entrega}`}>
+                 {selectedMovimentacao.tipo === 'DEVOLUCAO' ? 'DEVOLUÇÃO REALIZADA' : 'ENTREGA REALIZADA'}
+              </div>
+
+              <div className={modalStyles.grid}>
+                 {/* Coluna 1: Funcionário */}
+                 <div className={modalStyles.section}>
+                    <h3><User size={16}/> Colaborador</h3>
+                    <div className={modalStyles.infoRow}>
+                        <label>Nome:</label>
+                        <span>{selectedMovimentacao.funcionario}</span>
+                    </div>
+                    <div className={modalStyles.infoRow}>
+                        <label>Setor:</label>
+                        <span>{selectedMovimentacao.setor}</span>
+                    </div>
+                 </div>
+
+                 {/* Coluna 2: EPI */}
+                 <div className={modalStyles.section}>
+                    <h3><Package size={16}/> Equipamento</h3>
+                    <div className={modalStyles.infoRow}>
+                        <label>Item:</label>
+                        <span>{selectedMovimentacao.epi}</span>
+                    </div>
+                    <div className={modalStyles.infoRow}>
+                        <label>Quantidade:</label>
+                        <span>{selectedMovimentacao.quantidade} un.</span>
+                    </div>
+                 </div>
+
+                 {/* Coluna 3: Log */}
+                 <div className={modalStyles.section}>
+                    <h3><Calendar size={16}/> Registro</h3>
+                    <div className={modalStyles.infoRow}>
+                        <label>Data:</label>
+                        <span>{new Date(selectedMovimentacao.dataEntrega).toLocaleDateString()}</span>
+                    </div>
+                    <div className={modalStyles.infoRow}>
+                        <label>Status:</label>
+                        <StatusBadge status={selectedMovimentacao.status} />
+                    </div>
+                 </div>
+              </div>
+
+              {/* Área de Segurança / Assinatura */}
+              <div className={modalStyles.securityBox}>
+                 <div className={modalStyles.securityIcon}>
+                    <ShieldCheck size={32} />
+                 </div>
+                 <div className={modalStyles.securityInfo}>
+                    <h4>Assinatura Biométrica Validada</h4>
+                    <p>Autenticado via leitor biométrico em {new Date(selectedMovimentacao.dataEntrega).toLocaleDateString()} às 14:30 (simulado)</p>
+                    <small>Hash: 8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4</small>
+                 </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
