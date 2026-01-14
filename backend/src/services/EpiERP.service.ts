@@ -1,15 +1,15 @@
-//JUNÇÃO DE epi.service.ts + epi-nextsi.service.ts + saldo.service.ts + movimentacao.service.ts
-
-// src/services/epi.service.ts
 import { prisma } from "../db/prisma.js";
 import { Prisma } from "@prisma/client";
 import sql from "mssql";
 
+// src/services/epi.service.ts -- junção de epi.service.ts + epi-nextsi.service.ts + saldo.service.ts + movimentacao.service.ts
 
+//LISTA TODOS OS EPIs DO BANCO LOCAL 
 export async function listarEpis() {
   return prisma.epi.findMany();
 }
 
+// CRIA UM NOVO EPI NO BANCO LOCAL
 export async function criarEpi(data: {
   codigo: string;
   tipo: string;
@@ -22,7 +22,6 @@ export async function criarEpi(data: {
 }) {
   return prisma.epi.create({ data });
 }
-
 
 // src/services/epi-nextsi.service.ts
 /**
@@ -41,8 +40,10 @@ const config = {
   },
 };
 
+// Pool de conexões reutilizável para o NEXTSI ERP - evita overhead de reconexão
 let pool: sql.ConnectionPool | null = null;
 
+// Função para obter o pool de conexões (cria se não existir) - SERVE PARA REUTILIZAÇÃO DE CONEXÕES
 async function getPool(): Promise<sql.ConnectionPool> {
   if (!pool) {
     // @ts-ignore
@@ -53,6 +54,7 @@ async function getPool(): Promise<sql.ConnectionPool> {
   return pool;
 }
 
+// Função para checar a conexão com o NEXTSI (Healthcheck)
 export async function checkConnection(): Promise<boolean> {
   try {
     const pool = await getPool();
@@ -64,6 +66,7 @@ export async function checkConnection(): Promise<boolean> {
   }
 }
 
+// Lista itens do tipo EP no NEXTSI
 export async function listarItensEPNextsi() {
   try {
     const pool = await getPool();
@@ -92,6 +95,9 @@ export async function listarItensEPNextsi() {
   }
 }
 
+// Busca saldos de itens no ERP
+// Fonte: NEXTSI_HOMOLOG.dbo.E01
+// Agrupa por item e soma as quantidades
 export async function obterSaldosNextsi(codigos: string[]) {
   try {
     if (!codigos || codigos.length === 0) return [];
@@ -121,6 +127,7 @@ export async function obterSaldosNextsi(codigos: string[]) {
   }
 }
 
+// Obtém detalhes do saldo de um item específico no NEXTSI (E01_LOCAL, E01_LOTE, E01_SERIE, etc.) 
 export async function obterSaldoDetalheNextsi(codigo: string) {
   try {
     const pool = await getPool();
@@ -176,16 +183,6 @@ export async function atualizarEstoqueMinimoNextsi(
     throw err;
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 /**saldo.service.ts
  * Retorna o saldo (SUM de E01_QUANTATUAL) para um item no ERP (sinônimo dbo.erp_SaldoItens).
@@ -255,24 +252,7 @@ export async function obterSaldosPorItens(codigos: string[]) {
   return rows;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // src/services/movimentacao.service.ts
-
 type MovDto = {
   epiId: number;
   colaboradorId: number;
@@ -282,6 +262,7 @@ type MovDto = {
   lote?: string;
 };
 
+// Registra uma entrega de EPI - movimentação do tipo "ENTREGA"
 export async function entregar(dto: MovDto) {
   return prisma.$transaction(async (tx) => {
     const mov = await tx.movimentacaoEpi.create({
@@ -299,6 +280,7 @@ export async function entregar(dto: MovDto) {
   });
 }
 
+// Registra uma devolução de EPI - movimentação do tipo "DEVOLUCAO"
 export async function devolver(dto: MovDto) {
   return prisma.$transaction(async (tx) => {
     const mov = await tx.movimentacaoEpi.create({
