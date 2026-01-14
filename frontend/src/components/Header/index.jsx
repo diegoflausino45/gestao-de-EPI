@@ -2,6 +2,7 @@ import Styles from "./styles.module.css"
 import { FaUserCircle } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import Breadcrumb from "../Breadcrumb";
 
 function Header() {
     const { user } = useAuth();
@@ -14,8 +15,9 @@ function Header() {
 
     return (
         <div className={Styles.header}>
-            {/* Espaço vazio para manter o flex-between jogando o user para a direita */}
-            <div></div> 
+            <div className={Styles.breadcrumbWrapper}>
+                <Breadcrumb theme="dark" />
+            </div>
             
             <Link to={'/perfil'} className={Styles.user} title="Ir para meu Perfil">
                 <span>{primeiroNome}</span>

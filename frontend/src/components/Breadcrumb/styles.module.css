@@ -1,28 +1,65 @@
-.breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding-left: 5px;
-    font-size: 0.9rem;
-    background: #fff;
-    height: 20px;
+.breadcrumbContainer {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
-.breadcrumb a {
-    color: #010101;
-    text-decoration: none;
+.mainTitle, .pageTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.breadcrumb a:hover {
-    text-decoration: underline;
+/* Círculo da Home (Similar ao Avatar) */
+.homeCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-right: 12px;
 }
 
-.separator {
-    margin: 0 6px;
-    color: #999;
+.homeCircle:hover {
+  background-color: #f1f5f9;
+  color: var(--primary-color);
+  transform: translateY(-1px);
 }
 
-.current {
-    font-weight: bold;
-    color: #333;
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #cbd5e1;
+  margin-right: 16px;
+}
+
+/* --- TEMA DARK (PARA O HEADER AZUL) --- */
+
+.darkTheme .mainTitle, 
+.darkTheme .pageTitle {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.darkTheme .homeCircle {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.darkTheme .homeCircle:hover {
+  background-color: #ffffff;
+  color: var(--primary-color, #2563eb);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.darkTheme .divider {
+  background-color: rgba(255, 255, 255, 0.2);
 }

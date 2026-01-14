@@ -17,7 +17,6 @@ import Perfil from "../containers/Perfil"
 
 import Header from "../components/Header"
 import SideBar from "../components/SideBar"
-import Breadcrumb from "../components/Breadcrumb"
 import ScrollToTop from "../components/ScrollToTop"
 
 import { AuthProvider, useAuth } from "../context/AuthContext"
@@ -44,7 +43,6 @@ function PrivateLayout() {
             <div className={Styles.mainContent}>
                 <Header />
                 <div className={Styles.pageContent}>
-                    <Breadcrumb />
                     <Outlet /> {/* Aqui renderiza os filhos (Home, Funcionarios...) */}
                 </div>
                 <ScrollToTop />
