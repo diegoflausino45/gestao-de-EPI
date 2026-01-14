@@ -22,6 +22,30 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function signIn(email, password) {
+    // --- MODO OFFLINE / BYPASS PARA DESENVOLVIMENTO ---
+    if (email === 'dev@offline') {
+        const mockUser = {
+            id: 999,
+            nome: 'Desenvolvedor Local (Offline)',
+            email: 'dev@offline',
+            avatar: null,
+            isAdmin: true
+        };
+        const mockToken = 'dev-offline-token-123456';
+
+        localStorage.setItem('@GestaoEPI:user', JSON.stringify(mockUser));
+        localStorage.setItem('@GestaoEPI:token', mockToken);
+        api.defaults.headers.Authorization = `Bearer ${mockToken}`;
+        
+        setUser(mockUser);
+        
+        // Simula um pequeno delay para parecer real
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        return { success: true };
+    }
+    // --------------------------------------------------
+
     try {
       // Chamada real ao backend
       const response = await api.post('/auth/login', {
