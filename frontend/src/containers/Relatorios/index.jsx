@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
-import { Download, Filter, Calendar, Search } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Download, Filter, Search, ChevronDown, FileText, Printer } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import styles from "./styles.module.css";
 import relatorioStyles from "./relatorio.module.css";
 
@@ -23,6 +25,23 @@ export default function Relatorios() {
     funcionario: "",
     setor: "",
   });
+  
+  // Estado para controlar o menu dropdown
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef(null);
+
+  // Fechar o menu se clicar fora
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setIsExportMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   
   // Dados filtrados "vivos"
   const filteredData = useMemo(() => {
@@ -48,7 +67,7 @@ export default function Relatorios() {
   }, [filters, activeTab]);
 
   // Função de Exportação CSV
-  const handleExport = () => {
+  const handleExportCSV = () => {
     const headers = ["ID", "Funcionário", "Setor", "EPI", "Quantidade", "Data", "Status"];
     const csvContent = [
       headers.join(","),
@@ -65,6 +84,97 @@ export default function Relatorios() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setIsExportMenuOpen(false);
+  };
+
+  // Função de Exportação PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(18);
+    doc.text("Relatório de Gestão de EPIs", 14, 22);
+    
+    // Subtítulo e Data
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    const tipoRelatorio = activeTab === 'movimentacoes' ? 'Histórico de Movimentações' : 'Alertas de Vencimento';
+    doc.text(`${tipoRelatorio} - Gerado em: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    // Filtros Aplicados (Opcional, mas útil)
+    let filterText = "Filtros: ";
+    if (filters.setor) filterText += `Setor: ${filters.setor} | `; 
+    if (filters.startDate) filterText += `De: ${new Date(filters.startDate).toLocaleDateString()} | `; 
+    if (filters.endDate) filterText += `Até: ${new Date(filters.endDate).toLocaleDateString()}`;
+    if (filterText === "Filtros: ") filterText += "Nenhum filtro aplicado";
+    
+    doc.setFontSize(10);
+    doc.text(filterText, 14, 38);
+
+    // Configuração da Tabela
+    const tableColumn = ["Data", "Tipo", "Funcionário", "Setor", "EPI", "Qtd", "Status"];
+    const tableRows = [];
+
+    filteredData.forEach(item => {
+      const rowData = [
+        new Date(item.dataEntrega).toLocaleDateString(),
+        item.tipo || 'ENTREGA',
+        item.funcionario,
+        item.setor,
+        item.epi,
+        item.quantidade,
+        item.status
+      ];
+      tableRows.push(rowData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 45,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 }, // Azul padrão
+      alternateRowStyles: { fillColor: [245, 245, 245] }
+    });
+
+    doc.save(`relatorio_${activeTab}_${new Date().toISOString().slice(0,10)}.pdf`);
+    setIsExportMenuOpen(false);
+  };
+
+  // Função de Impressão (Gera PDF e abre janela de impressão)
+  const handlePrint = () => {
+    const doc = new jsPDF();
+    
+    // ... Mesma lógica de geração do PDF ...
+    doc.setFontSize(18);
+    doc.text("Relatório de Gestão de EPIs", 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    const tipoRelatorio = activeTab === 'movimentacoes' ? 'Histórico de Movimentações' : 'Alertas de Vencimento';
+    doc.text(`${tipoRelatorio} - Gerado em: ${new Date().toLocaleDateString()}`, 14, 30);
+    
+    const tableColumn = ["Data", "Tipo", "Funcionário", "Setor", "EPI", "Qtd", "Status"];
+    const tableRows = filteredData.map(item => [
+      new Date(item.dataEntrega).toLocaleDateString(),
+      item.tipo || 'ENTREGA',
+      item.funcionario,
+      item.setor,
+      item.epi,
+      item.quantidade,
+      item.status
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+    });
+
+    // Abre a janela de impressão nativa do navegador com o PDF gerado
+    doc.autoPrint();
+    window.open(doc.output('bloburl'), '_blank');
+    setIsExportMenuOpen(false);
   };
 
   const handleFilterChange = (e) => {
@@ -80,9 +190,31 @@ export default function Relatorios() {
             <span className={styles.badge}>{filteredData.length} registros</span>
         </div>
         
-        <button className={styles.addBtn} onClick={handleExport}>
-          <Download size={18} /> Exportar CSV
-        </button>
+        {/* DROPDOWN DE EXPORTAÇÃO */}
+        <div className={styles.exportWrapper} ref={exportMenuRef}>
+            <button 
+                className={styles.addBtn} 
+                onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+            >
+                <Download size={18} /> Exportar
+                <ChevronDown size={16} style={{ marginLeft: '4px', transform: isExportMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }}/>
+            </button>
+
+            {isExportMenuOpen && (
+                <div className={styles.dropdownMenu}>
+                    <button onClick={handleExportCSV} className={styles.dropdownItem}>
+                        <FileText size={16} /> CSV (Excel)
+                    </button>
+                    <button onClick={handleExportPDF} className={styles.dropdownItem}>
+                        <FileText size={16} /> PDF (Documento)
+                    </button>
+                    <div className={styles.divider}></div>
+                    <button onClick={handlePrint} className={styles.dropdownItem}>
+                        <Printer size={16} /> Imprimir
+                    </button>
+                </div>
+            )}
+        </div>
       </header>
 
       {/* --- ABAS --- */}
