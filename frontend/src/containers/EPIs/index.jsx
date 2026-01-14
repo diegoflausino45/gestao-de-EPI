@@ -1,11 +1,12 @@
 import styles from "./styles.module.css";
 import modal from "./modal.module.css";
 import table from "./table.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { listarEpis, atualizarEstoqueMinimo } from "../../services/epiApi";
 
 import SearchBar from "../../components/SearchBar";
 import Modal from "../../components/Modal"
+import Pagination from "../../components/Pagination";
 
 const initialState = {
   nome: "",
@@ -216,6 +217,8 @@ export default function EPIs() {
   const [selectedEpi, setSelectedEpi] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Carrega EPIs do banco e seus saldos do ERP
   useEffect(() => {
@@ -233,7 +236,15 @@ export default function EPIs() {
           e.descricao.toLowerCase().includes(search.toLowerCase()))
     );
     setEpiFiltrados(filtrados);
+    setCurrentPage(1);
   }, [search, epi]);
+
+  // Calcula os dados da página atual
+  const episPaginados = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return epiFiltrados.slice(startIndex, endIndex);
+  }, [currentPage, epiFiltrados, itemsPerPage]);
 
   async function carregarEpis() {
     try {
@@ -311,7 +322,14 @@ export default function EPIs() {
 
       <SearchBar value={search} onChange={setSearch} placeholder={"Buscar EPI..."}/>
 
-      <EpiTable dados={epiFiltrados} onEdit={handleEdit} />
+      <EpiTable dados={episPaginados} onEdit={handleEdit} />
+
+      <Pagination 
+        totalItems={epiFiltrados.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        maxPagesVisible={5}
+      />
 
       <EpiModal
         isOpen={openModal}

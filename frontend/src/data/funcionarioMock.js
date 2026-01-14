@@ -103,3 +103,5 @@ export const funcionariosMock = [
     ativo: false
   }
 ];
+
+export default funcionariosMock;

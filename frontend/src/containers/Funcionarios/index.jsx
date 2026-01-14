@@ -9,6 +9,8 @@ import SearchBar from "../../components/SearchBar";
 import Modal from "../../components/Modal"
 import BiometriaService from "../../services/BiometriaService";
 
+import funcionariosMock from "../../data/funcionarioMock.js"
+
 import { api } from "../../services/api";
 
 // IMPORTANDO O SERVIÇO DE BIOMETRIA
@@ -263,6 +265,8 @@ function Funcionarios() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState(null);
   const [search, setSearch] = useState("");
+  const funcionarioMock = funcionariosMock;
+  
 
   const funcionariosFiltrados = funcionarios.filter(f =>
   f.nome.toLowerCase().includes(search.toLowerCase()) ||
@@ -276,7 +280,9 @@ useEffect(() => {
       const response = await api.get("/funcionarios");
       setFuncionarios(response.data);
     } catch (error) {
-      console.error("Erro ao buscar funcionários", error);
+      console.error("Erro ao buscar funcionários da API, usando dados mock", error);
+      // Fallback para mock em caso de erro na API
+      setFuncionarios(funcionariosMock);
     }
   }
 
