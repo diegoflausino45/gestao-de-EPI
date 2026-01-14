@@ -1,6 +1,4 @@
 .container {
-  padding: 24px;
-  background-color: #f8f9fa;
   height: 100%;
 }
 
@@ -18,22 +16,83 @@
   color: #333;
 }
 
-/* Botão adicionar */
+/* --- EXPORT BUTTON & DROPDOWN --- */
+.exportWrapper {
+  position: relative;
+  z-index: 10;
+}
+
 .addBtn {
   padding: 10px 16px;
   border-radius: 6px;
   border: 1px solid #cfcfcf;
   background-color: #28a745;
-    color: #fff;
+  color: #fff;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 0.5em;
+  font-size: 0.9rem;
 }
 
 .addBtn:hover {
   background-color: #218838;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  min-width: 180px;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+  padding: 4px 0;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #334155;
+  transition: background 0.1s;
+}
+
+.dropdownItem:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.divider {
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 4px 0;
+}
+
+/* --- BADGE --- */
+.badge {
+    background-color: #e2e8f0;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
 }
