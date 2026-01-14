@@ -1,72 +1,67 @@
+// IMPORTAÇÕES DE DEPENDÊNCIAS E SERVIÇOS
 import { Router } from "express";
-import {criarEpi, obterSaldoItem, listarSaldosDetalhados,  listarItensEPNextsi, obterSaldosNextsi } from "../services/EpiERP.service.js";
-/*Import Anterior
-import { listarEpis, criarEpi, obterSaldoItem, 
-    listarSaldosDetalhados, obterSaldosPorItens,  listarItensEPNextsi, obterSaldosNextsi, obterSaldoDetalheNextsi } from "../services/EpiERP.service.js";*/
+import {
+    criarEpi, 
+    obterSaldoItem, 
+    listarSaldosDetalhados,  
+    listarItensEPNextsi, 
+    obterSaldosNextsi, 
+    atualizarEstoqueMinimoNextsi 
+} from "../services/EpiERP.service.js";
 
+// CRIAÇÃO DO ROUTER, DEFINIÇÃO DAS ROTAS
 const router = Router();
 
-// Exemplo de rotas já existentes
+// Lista todos os EPIs com saldos atuais (GET /)
 router.get("/", async (_req, res, next) => {
   try {
-    // Tentar carregar do ERP (G01 - itens EP), se falhar, usar mock
-    try {
-      console.log("🔍 [API] Buscando itens EP do NEXTSI_HOMOLOG...");
-      const epis = await listarItensEPNextsi();
-      
-      console.log(`✅ [API] Encontrados ${epis?.length || 0} itens EP`);
-      
-      // Se não houver itens, retornar mock
-      if (!epis || epis.length === 0) {
-        console.log("⚠️ Nenhum item EP encontrado no ERP, usando dados mock");
-        return res.json(epis);
-      }
+    console.log("🔍 [API] Buscando itens EP do NEXTSI_HOMOLOG...");
+    const epis = await listarItensEPNextsi();
 
-      // Extrair códigos dos itens (G01_CODIGO)
-      const codigos = epis.map((e: any) => e.G01_CODIGO);
-      console.log(`🔍 [API] Buscando saldos para ${codigos.length} itens...`);
-
-      // Buscar saldos dos itens
-      const saldosDb = await obterSaldosNextsi(codigos);
-      console.log(`✅ [API] Encontrados saldos para ${saldosDb?.length || 0} itens`);
-      
-      // Mapear saldos para acesso rápido
-      const saldosMap = Object.fromEntries(
-        saldosDb.map((s: any) => [s.E01_ITEM, s.SaldoTotal])
-      );
-
-      // Combinar dados: itens G01 + saldos E01
-      const epicsComSaldo = epis.map((e: any) => ({
-        id: e.G01_ID,
-        codigo: e.G01_CODIGO,
-        nome: e.G01_DESCRICAO,
-        tipo: e.G01_TIPO,
-        descricao: e.G01_DESCRICAO,
-        grupoItem: e.G01_GRUPOITEM,
-        um: e.G01_UM,
-        fabricante: e.G01_FABRICANTE,
-        dataNascimento: e.G01_DTNASC,
-        observacoes: e.G01_OBSERVACOES,
-        estoqueAtual: saldosMap[e.G01_CODIGO] ?? 0,
-        estoqueMinimo: 0, // G01 não tem estoqueMinimo, pode ser adicionado depois
-        status:
-          (saldosMap[e.G01_CODIGO] ?? 0) <= 0 ? "CRÍTICO" : "OK",
-      }));
-
-      console.log(`✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`);
-      return res.json(epicsComSaldo);
-    } catch (dbErr: any) {
-      console.error("❌ [API] Erro ao buscar do ERP:");
-      console.error(dbErr.message || dbErr);
-      console.log("⚠️ Usando dados mock como fallback");
-      return res.json(dbErr);
+    // Se não houver itens, retorna array vazio
+    if (!epis || epis.length === 0) {
+      return res.json([]);
     }
+
+    // Extrair códigos para buscar saldos em lote
+    const codigos = epis.map((e: any) => e.G01_CODIGO);
+
+    // Buscar saldos
+    const saldosDb = await obterSaldosNextsi(codigos);
+
+    // Mapear saldos para acesso rápido (Hash Map)
+    const saldosMap = Object.fromEntries(
+      saldosDb.map((s: any) => [s.E01_ITEM, s.SaldoTotal])
+    );
+
+    // Combinar dados: Itens G01 + Saldos E01
+    const epicsComSaldo = epis.map((e: any) => ({
+      id: e.G01_ID,
+      codigo: e.G01_CODIGO,
+      nome: e.G01_DESCRICAO,
+      tipo: e.G01_TIPO,
+      descricao: e.G01_DESCRICAO,
+      grupoItem: e.G01_GRUPOITEM,
+      um: e.G01_UM,
+      fabricante: e.G01_FABRICANTE,
+      dataNascimento: e.G01_DTNASC,
+      observacoes: e.G01_OBSERVACOES,
+      estoqueMinimo:
+        e.G01_PP !== undefined && e.G01_PP !== null ? Number(e.G01_PP) : null, // mapeia o estoque mínimo (G01_PP) vindo do ERP
+      estoqueAtual: saldosMap[e.G01_CODIGO] ?? 0,
+      status: (saldosMap[e.G01_CODIGO] ?? 0) <= 0 ? "CRÍTICO" : "OK",
+    }));
+
+    console.log(`✅ [API] Retornando ${epicsComSaldo.length} EPIs com saldos`);
+    return res.json(epicsComSaldo);
   } catch (err) {
+    // Passa erro para o handler central (não usa mais mock)
     next(err);
   }
 });
 
-router.post("/epis", async (req, res, next) => {
+// Cria um novo EPI (POST /)
+router.post("/", async (req, res, next) => {
   try {
     const novo = await criarEpi(req.body);
     res.status(201).json(novo);
@@ -75,8 +70,8 @@ router.post("/epis", async (req, res, next) => {
   }
 });
 
-// Saldo total de um item (GET)
-router.get("/itens/:codigo/saldo-erp", async (req, res, next) => {
+// Consulta saldo de um item específico (GET /:codigo/saldo) 
+router.get("/:codigo/saldo", async (req, res, next) => {
   try {
     const codigo = req.params.codigo;
     const saldo = await obterSaldoItem(codigo);
@@ -86,8 +81,8 @@ router.get("/itens/:codigo/saldo-erp", async (req, res, next) => {
   }
 });
 
-// (Opcional) Detalhes por local/lote/série (GET)
-router.get("/itens/:codigo/saldo-erp/detalhe", async (req, res, next) => {
+// Detalhes de saldo por Local/Lote/Série (GET /:codigo/saldo/detalhe)  
+router.get("/:codigo/saldo/detalhe", async (req, res, next) => {
   try {
     const codigo = req.params.codigo;
     const dados = await listarSaldosDetalhados(codigo);
@@ -97,44 +92,65 @@ router.get("/itens/:codigo/saldo-erp/detalhe", async (req, res, next) => {
   }
 });
 
-// ✅ NOVA ROTA: saldos em lote (POST) - Usa ERP
-router.post("/itens/saldos-erp", async (req, res, next) => {
+// Consulta de saldos em lote via NEXTSI (POST /api/epis/saldos-erp) 
+router.post("/saldos-erp", async (req, res, next) => {
   try {
     const { codigos } = req.body as { codigos: string[] };
+
     if (!Array.isArray(codigos) || codigos.length === 0) {
       return res
         .status(400)
         .json({ message: 'Informe um array "codigos" com ao menos 1 item.' });
     }
-    
-    // Tentar carregar do ERP (E01), se falhar, usar mock
+
+    // Busca direta no ERP
+    const saldosDb = await obterSaldosNextsi(codigos);
+
+    const saldos = saldosDb.map((s: any) => ({
+      codigo: s.E01_ITEM,
+      saldo: s.SaldoTotal || 0,
+    }));
+
+    return res.json({ saldos });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Atualiza estoque mínimo (G01_PP) no NEXTSI (atenção: requer permissão de escrita no DB NEXTSI)
+router.put("/:codigo/estoque-minimo", async (req, res, next) => {
+  try {
+    const codigo = req.params.codigo;
+    const { estoqueMinimo } = req.body as { estoqueMinimo: string | number };
+
+    if (estoqueMinimo === undefined || estoqueMinimo === null) {
+      return res
+        .status(400)
+        .json({ message: "Informe 'estoqueMinimo' no body." });
+    }
+
+    // validação simples e conversão para number (DECIMAL)
+    const valor = Number(estoqueMinimo);
+    if (!isFinite(valor) || valor < 0) {
+      return res.status(400).json({ message: "estoqueMinimo inválido" });
+    }
+
+    await atualizarEstoqueMinimoNextsi(codigo, valor);
+
+    // Recalcula saldo atual para esse item e determina status
     try {
-      const saldosDb = await obterSaldosItensERP(codigos);
-      
-      // Converter resultado para formato esperado
-      const saldos = saldosDb.map((s) => ({
-        codigo: s.E01_ITEM,
-        saldo: s.SaldoTotal || 0,
-      }));
-      
-      return res.json({ saldos });
-    } catch (dbErr) {
-      console.log("⚠️ Banco de dados ERP não acessível, usando saldos mock");
-      console.error(dbErr.message);
-      
-      // Dados mock de saldos
-      const saldosMock = {
-        "080101.00010": 80,
-        "080102.00020": 45,
-        "080103.00030": 35,
-      };
-      
-      const saldos = codigos.map((codigo) => ({
+      const saldoAtual = await obterSaldoItem(codigo);
+      const status = (saldoAtual ?? 0) <= valor ? "CRÍTICO" : "OK";
+      return res.json({
         codigo,
-        saldo: saldosMock[codigo as keyof typeof saldosMock] ?? 0,
-      }));
-      
-      return res.json({ saldos });
+        estoqueMinimo: valor,
+        estoqueAtual: saldoAtual,
+        status,
+      });
+    } catch (errSaldo) {
+      // Se não for possível calcular o saldo, retorna pelo menos o estoqueMinimo
+      console.error("Erro ao recalcular saldo após atualização:", errSaldo);
+      return res.json({ codigo, estoqueMinimo: valor });
     }
   } catch (err) {
     next(err);

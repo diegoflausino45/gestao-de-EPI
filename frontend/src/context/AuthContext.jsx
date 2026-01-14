@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
   async function signIn(email, password) {
     try {
       // Chamada real ao backend
-      const response = await api.post('/api/auth/login', {
+      const response = await api.post('/auth/login', {
         email,
         password
       });

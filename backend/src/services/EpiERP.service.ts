@@ -5,6 +5,7 @@ import { prisma } from "../db/prisma.js";
 import { Prisma } from "@prisma/client";
 import sql from "mssql";
 
+
 export async function listarEpis() {
   return prisma.epi.findMany();
 }
@@ -29,11 +30,11 @@ export async function criarEpi(data: {
  * Usa conexão SQL Server direta (sem Prisma) para melhor performance e controle
  */
 const config = {
-  server: process.env.NEXTSI_HOST || "APLIC-SERVER",
-  port: Number(process.env.NEXTSI_PORT || 1433),
+  server: process.env.NEXTSI_HOST,
+  port: Number(process.env.NEXTSI_PORT ?? 1433),
+  user: process.env.NEXTSI_USER,
+  password: process.env.NEXTSI_PASSWORD,
   database: "NEXTSI_HOMOLOG",
-  user: process.env.NEXTSI_USER || "sa",
-  password: process.env.NEXTSI_PASSWORD || "",
   options: {
     encrypt: true,
     trustServerCertificate: true,
@@ -44,6 +45,7 @@ let pool: sql.ConnectionPool | null = null;
 
 async function getPool(): Promise<sql.ConnectionPool> {
   if (!pool) {
+    // @ts-ignore
     pool = new sql.ConnectionPool(config);
     await pool.connect();
     console.log("[NEXTSI] Pool de conexão SQL estabelecido");
@@ -51,12 +53,21 @@ async function getPool(): Promise<sql.ConnectionPool> {
   return pool;
 }
 
+export async function checkConnection(): Promise<boolean> {
+  try {
+    const pool = await getPool();
+    await pool.request().query("SELECT 1");
+    return true;
+  } catch (err) {
+    console.error("[NEXTSI] Falha no Healthcheck:", err);
+    return false;
+  }
+}
+
 export async function listarItensEPNextsi() {
   try {
     const pool = await getPool();
-    const result = await pool
-      .request()
-      .query(`
+    const result = await pool.request().query(`
         SELECT TOP 500
           G01_ID,
           G01_CODIGO,
@@ -66,7 +77,8 @@ export async function listarItensEPNextsi() {
           G01_UM,
           G01_FABRICANTE,
           G01_DTNASC,
-          G01_OBSERVACOES
+          G01_OBSERVACOES,
+          G01_PP -- Estoque mínimo/PP (proposto) vindo do ERP
         FROM dbo.G01
         WHERE G01_TIPO = 'EP'
           AND G01_EXCLUIDO = 'N'
@@ -112,9 +124,7 @@ export async function obterSaldosNextsi(codigos: string[]) {
 export async function obterSaldoDetalheNextsi(codigo: string) {
   try {
     const pool = await getPool();
-    const result = await pool
-      .request()
-      .input("codigo", sql.VarChar(50), codigo)
+    const result = await pool.request().input("codigo", sql.VarChar(50), codigo)
       .query(`
         SELECT 
           E01_ITEM,
@@ -145,9 +155,43 @@ export async function closePool() {
   }
 }
 
+// Atualiza o campo G01_PP (estoque mínimo / ponto de pedido) no NEXTSI
+export async function atualizarEstoqueMinimoNextsi(
+  codigo: string,
+  novoPP: number
+) {
+  try {
+    const pool = await getPool();
+    await pool
+      .request()
+      .input("codigo", sql.VarChar(50), codigo)
+      .input("pp", sql.Decimal(18, 4), novoPP).query(`
+        UPDATE dbo.G01
+        SET G01_PP = @pp
+        WHERE G01_CODIGO = @codigo
+      `);
+    return { ok: true };
+  } catch (err) {
+    console.error("[NEXTSI] Erro ao atualizar G01_PP:", err);
+    throw err;
+  }
+}
+
+
+
+
+
+
+
+
+
 
 
 /**saldo.service.ts
+ * Retorna o saldo (SUM de E01_QUANTATUAL) para um item no ERP (sinônimo dbo.erp_SaldoItens).
+ * Se E01_QUANTATUAL for VARCHAR, descomente o CAST.
+ */
+/**
  * Retorna o saldo (SUM de E01_QUANTATUAL) para um item no ERP (sinônimo dbo.erp_SaldoItens).
  * Se E01_QUANTATUAL for VARCHAR, descomente o CAST.
  */
@@ -210,6 +254,22 @@ export async function obterSaldosPorItens(codigos: string[]) {
   );
   return rows;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // src/services/movimentacao.service.ts
 

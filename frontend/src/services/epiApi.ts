@@ -13,22 +13,22 @@ export async function listarEpis() {
 
 // Consulta de saldos em lote
 export async function buscarSaldosErp(codigos: string[]) {
-  const { data } = await api.post("/itens/saldos-erp", { codigos });
+  const { data } = await api.post("/epis/saldos-erp", { codigos });
   // data.saldos = [{ codigo, saldo }]
   return data.saldos as { codigo: string; saldo: number }[];
 }
 
 // Consulta saldo de um item específico
 export async function obterSaldoItem(codigo: string) {
-  const { data } = await api.get(`/itens/${codigo}/saldo-erp`);
+  const { data } = await api.get(`/epis/${codigo}/saldo-erp`);
   return data.saldo as number;
 }
 
-export async function atualizarEstoqueMinimo(codigo, estoqueMinimo) {
+export async function atualizarEstoqueMinimo(codigo: string | number , estoqueMinimo: any) {
   // garantir número
   const body = { estoqueMinimo: Number(estoqueMinimo) };
   const { data } = await api.put(
-    `/api/itens/${encodeURIComponent(codigo)}/estoque-minimo`,
+    `/epis/${encodeURIComponent(codigo)}/estoque-minimo`,
     body
   );
   return data;

@@ -1,5 +1,5 @@
 // src/services/epi-erp.service.ts
-import { prismaNextsi } from "../db/prisma-nextsi";
+import { prismaNextsi } from "../db/prisma-nextsi.js";
 
 /**
  * Busca todos os itens EP (Equipamento de Proteção) do ERP

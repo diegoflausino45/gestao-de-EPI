@@ -34,7 +34,7 @@ function DadosPessoais() {
 
     setLoadingProfile(true);
     try {
-      const response = await api.put('/api/users/profile', { nome, email });
+      const response = await api.put('/auth/users/profile', { nome, email });
       updateUser(response.data);
       setIsEditing(false);
       toast.success("Perfil atualizado com sucesso!");
@@ -64,7 +64,7 @@ function DadosPessoais() {
     
     setLoadingPassword(true);
     try {
-      await api.patch('/api/users/password', { senhaAtual, novaSenha });
+      await api.patch('/auth/users/password', { senhaAtual, novaSenha });
       setSenhaAtual("");
       setNovaSenha("");
       setConfirmarSenha("");
