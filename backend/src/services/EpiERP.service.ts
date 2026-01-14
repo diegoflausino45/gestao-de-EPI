@@ -4,7 +4,7 @@ import sql from "mssql";
 
 // src/services/epi.service.ts -- junção de epi.service.ts + epi-nextsi.service.ts + saldo.service.ts + movimentacao.service.ts
 
-//LISTA TODOS OS EPIs DO BANCO LOCAL 
+//LISTA TODOS OS EPIs DO BANCO LOCAL
 export async function listarEpis() {
   return prisma.epi.findMany();
 }
@@ -49,7 +49,7 @@ async function getPool(): Promise<sql.ConnectionPool> {
     // @ts-ignore
     pool = new sql.ConnectionPool(config);
     await pool.connect();
-    console.log("[NEXTSI] Pool de conexão SQL estabelecido");
+    /*console.log("[NEXTSI] Pool de conexão SQL estabelecido");*/ //Desativado para reduzir log
   }
   return pool;
 }
@@ -127,7 +127,7 @@ export async function obterSaldosNextsi(codigos: string[]) {
   }
 }
 
-// Obtém detalhes do saldo de um item específico no NEXTSI (E01_LOCAL, E01_LOTE, E01_SERIE, etc.) 
+// Obtém detalhes do saldo de um item específico no NEXTSI (E01_LOCAL, E01_LOTE, E01_SERIE, etc.)
 export async function obterSaldoDetalheNextsi(codigo: string) {
   try {
     const pool = await getPool();
