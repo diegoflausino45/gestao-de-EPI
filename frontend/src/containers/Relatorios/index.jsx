@@ -1,114 +1,236 @@
-import { FiArrowDown } from "react-icons/fi";
+import { useState, useEffect, useMemo } from "react";
+import { Download, Filter, Calendar, Search } from "lucide-react";
 import styles from "./styles.module.css";
-import relatorio from "./relatorio.module.css";
+import relatorioStyles from "./relatorio.module.css";
 
-import { EntregasModal } from "../Entregas";
-import { EntregasTable } from "../Entregas";
+// Importando Mock (ou definindo um expandido aqui para testes)
+import { relatorioMock } from "../../data/relatorioMock";
 
-import { useState } from "react";
-import { entregasMock } from "../../data/entregasMock";
-
-function RelatorioTable() {
-
-  return (
-    <div className={relatorio.tableWrapper}>
-
-      <div className={relatorio.header}>
-        <h3>Filtros</h3>
-      </div>
-
-      <div className={relatorio.row}>
-        <div className={`${relatorio.field} ${relatorio.periodo}`}>
-          <label>Período</label>
-          <div className={relatorio.periodoInputs}>
-            <input type="date" className={relatorio.date} />
-            <input type="date" className={relatorio.date} />
-          </div>
-        </div>
-      </div>
-
-      <div className={relatorio.row}>
-        <div className={relatorio.field}>
-          <label>Funcionário</label>
-          <select>
-            <option value="">- Selecione -</option>
-            <option>João Silva</option>
-            <option>Maria Souza</option>
-          </select>
-        </div>
-
-        <div className={relatorio.field}>
-          <label>Setor</label>
-          <select>
-            <option value="">- Selecione -</option>
-            <option>Produção</option>
-            <option>Administrativo</option>
-            <option>Logística</option>
-          </select>
-        </div>
-      </div>
-
-      <button className={relatorio.button}>Gerar Relatório</button>
-
-    </div>
-
-  );
-}
-
-
+// Mock expandido para testes mais robustos
+const MOCK_DATA = [
+  ...relatorioMock,
+  { id: 101, funcionario: "Carlos Mendes", setor: "Logística", epi: "Bota de Segurança", quantidade: 1, dataEntrega: "2024-12-01", status: "Ativa", tipo: "ENTREGA" },
+  { id: 102, funcionario: "Ana Paula", setor: "Administrativo", epi: "Protetor Auricular", quantidade: 5, dataEntrega: "2024-12-15", status: "Vencendo", tipo: "ENTREGA" },
+  { id: 103, funcionario: "João Silva", setor: "Produção", epi: "Luva de Malha", quantidade: 2, dataEntrega: "2024-11-10", status: "Devolvida", tipo: "DEVOLUCAO" },
+  { id: 104, funcionario: "Roberto Costa", setor: "Manutenção", epi: "Cinto Paraquedista", quantidade: 1, dataEntrega: "2024-01-10", status: "Vencida", tipo: "ENTREGA" },
+];
 
 export default function Relatorios() {
-  const [entregas, setEntregas] = useState(entregasMock);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedEntrega, setSelectedEntrega] = useState(null);
-  function handleEdit(entregas) {
-    setSelectedEntrega(entregas);
-    setOpenModal(true);
-  }
-  function handleSave(data) {
-    if (selectedEntrega) {
-      // editar
-      setEntregas(prev =>
-        prev.map(f =>
-          f.id === selectedEntrega.id
-            ? { ...data, id: f.id }
-            : f
-        )
-      );
-    } else {
-      // adicionar
-      setEntregas(prev => [
-        ...prev,
-        { ...data, id: Date.now(), status: "ativo" }
-      ]);
-    }
-  }
+  const [activeTab, setActiveTab] = useState("movimentacoes"); // movimentacoes | vencimentos
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    funcionario: "",
+    setor: "",
+  });
+  
+  // Dados filtrados "vivos"
+  const filteredData = useMemo(() => {
+    return MOCK_DATA.filter(item => {
+      // Filtro de Aba
+      if (activeTab === "vencimentos") {
+        if (item.status !== "Vencendo" && item.status !== "Vencida") return false;
+      }
+
+      // Filtros de Usuário
+      if (filters.funcionario && !item.funcionario.toLowerCase().includes(filters.funcionario.toLowerCase())) return false;
+      if (filters.setor && item.setor !== filters.setor) return false;
+      
+      // Filtro de Data
+      if (filters.startDate || filters.endDate) {
+        const itemDate = new Date(item.dataEntrega);
+        if (filters.startDate && itemDate < new Date(filters.startDate)) return false;
+        if (filters.endDate && itemDate > new Date(filters.endDate)) return false;
+      }
+
+      return true;
+    });
+  }, [filters, activeTab]);
+
+  // Função de Exportação CSV
+  const handleExport = () => {
+    const headers = ["ID", "Funcionário", "Setor", "EPI", "Quantidade", "Data", "Status"];
+    const csvContent = [
+      headers.join(","),
+      ...filteredData.map(row => 
+        `${row.id},"${row.funcionario}","${row.setor}","${row.epi}",${row.quantidade},${row.dataEntrega},${row.status}`
+      )
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `relatorio_${activeTab}_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>Relatórios</h1>
-        <button className={styles.addBtn}>
-          <FiArrowDown/> Exportar...
+        <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+            <h1 style={{margin: 0}}>Relatórios Gerenciais</h1>
+            <span className={styles.badge}>{filteredData.length} registros</span>
+        </div>
+        
+        <button className={styles.addBtn} onClick={handleExport}>
+          <Download size={18} /> Exportar CSV
         </button>
       </header>
 
-      
+      {/* --- ABAS --- */}
+      <div className={relatorioStyles.tabs}>
+        <button 
+            className={`${relatorioStyles.tab} ${activeTab === 'movimentacoes' ? relatorioStyles.active : ''}`}
+            onClick={() => setActiveTab('movimentacoes')}
+        >
+            Histórico de Movimentações
+        </button>
+        <button 
+            className={`${relatorioStyles.tab} ${activeTab === 'vencimentos' ? relatorioStyles.active : ''}`}
+            onClick={() => setActiveTab('vencimentos')}
+        >
+            Alertas de Vencimento
+        </button>
+      </div>
 
-      <RelatorioTable/>
+      {/* --- ÁREA DE FILTROS --- */}
+      <div className={relatorioStyles.tableWrapper}>
+        <div className={relatorioStyles.header}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <Filter size={16} color="#666"/>
+            <h3>Filtros Avançados</h3>
+          </div>
+        </div>
 
-      <br/>
-      <EntregasTable
-        dados={entregas}
-        onView={handleEdit}
-      />
+        <div className={relatorioStyles.filterGrid}>
+          
+          <div className={relatorioStyles.field}>
+            <label>Período</label>
+            <div className={relatorioStyles.periodoInputs}>
+              <div className={relatorioStyles.inputIcon}>
+                <input 
+                    type="date" 
+                    name="startDate"
+                    value={filters.startDate} 
+                    onChange={handleFilterChange} 
+                />
+              </div>
+              <span style={{alignSelf: 'center', color: '#999'}}>até</span>
+              <div className={relatorioStyles.inputIcon}>
+                 <input 
+                    type="date" 
+                    name="endDate"
+                    value={filters.endDate} 
+                    onChange={handleFilterChange} 
+                />
+              </div>
+            </div>
+          </div>
 
-      <EntregasModal
-              isOpen={openModal}
-              onClose={() => setOpenModal(false)}
-              onSave={handleSave}
-              entrega={selectedEntrega}
-            />
+          <div className={relatorioStyles.field}>
+            <label>Funcionário</label>
+            <div className={relatorioStyles.inputIconWrapper}>
+                <Search size={16} className={relatorioStyles.icon} />
+                <input 
+                    placeholder="Buscar por nome..." 
+                    name="funcionario"
+                    value={filters.funcionario}
+                    onChange={handleFilterChange}
+                    className={relatorioStyles.inputWithIcon}
+                />
+            </div>
+          </div>
+
+          <div className={relatorioStyles.field}>
+            <label>Setor</label>
+            <select name="setor" value={filters.setor} onChange={handleFilterChange}>
+              <option value="">Todos os Setores</option>
+              <option value="Produção">Produção</option>
+              <option value="Administrativo">Administrativo</option>
+              <option value="Logística">Logística</option>
+              <option value="Manutenção">Manutenção</option>
+              <option value="Segurança do Trabalho">Segurança do Trabalho</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* --- TABELA DE RESULTADOS --- */}
+      <div className={relatorioStyles.resultsCard}>
+        <table className={relatorioStyles.table}>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Funcionário</th>
+                    <th>Setor</th>
+                    <th>EPI</th>
+                    <th>Qtd</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {filteredData.length > 0 ? (
+                    filteredData.map(item => (
+                        <tr key={item.id}>
+                            <td>{new Date(item.dataEntrega).toLocaleDateString()}</td>
+                            <td>
+                                <span className={item.tipo === 'DEVOLUCAO' ? relatorioStyles.tagDevolucao : relatorioStyles.tagEntrega}>
+                                    {item.tipo || 'ENTREGA'}
+                                </span>
+                            </td>
+                            <td><strong>{item.funcionario}</strong></td>
+                            <td>{item.setor}</td>
+                            <td>{item.epi}</td>
+                            <td>{item.quantidade}</td>
+                            <td>
+                                <StatusBadge status={item.status} />
+                            </td>
+                        </tr>
+                    ))
+                ) : (
+                    <tr>
+                        <td colSpan="7" style={{textAlign: 'center', padding: '32px', color: '#999'}}>
+                            Nenhum registro encontrado para os filtros selecionados.
+                        </td>
+                    </tr>
+                )}
+            </tbody>
+        </table>
+      </div>
+
     </div>
   );
+}
+
+function StatusBadge({ status }) {
+    let color = '#64748b';
+    let bg = '#f1f5f9';
+
+    if(status === 'Ativa') { color = '#16a34a'; bg = '#dcfce7'; }
+    if(status === 'Vencendo') { color = '#ea580c'; bg = '#ffedd5'; }
+    if(status === 'Vencida') { color = '#dc2626'; bg = '#fee2e2'; }
+    if(status === 'Devolvida') { color = '#2563eb'; bg = '#dbeafe'; }
+
+    return (
+        <span style={{
+            backgroundColor: bg,
+            color: color,
+            padding: '4px 8px',
+            borderRadius: '12px',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            textTransform: 'uppercase'
+        }}>
+            {status}
+        </span>
+    )
 }
