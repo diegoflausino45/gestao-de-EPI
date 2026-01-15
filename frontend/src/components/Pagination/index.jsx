@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "./styles.module.css";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 function Pagination({ 
   totalItems = 0, 
@@ -61,7 +61,7 @@ function Pagination({
         disabled={currentPage === 1}
         title="Página anterior"
       >
-        <FaChevronLeft />
+        <ChevronLeft size={18} />
       </button>
 
       {startPage > 1 && (
@@ -106,11 +106,11 @@ function Pagination({
         disabled={currentPage === totalPages}
         title="Próxima página"
       >
-        <FaChevronRight />
+        <ChevronRight size={18} />
       </button>
 
       <div className={styles.info}>
-        Página {currentPage} de {totalPages}
+        Página <strong>{currentPage}</strong> de {totalPages}
       </div>
     </div>
   );

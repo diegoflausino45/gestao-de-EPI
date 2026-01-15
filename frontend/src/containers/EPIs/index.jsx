@@ -1,304 +1,90 @@
-import styles from "./styles.module.css";
-import modal from "./modal.module.css";
-import table from "./table.module.css";
 import { useState, useEffect, useMemo } from "react";
-import { listarEpis, atualizarEstoqueMinimo } from "../../services/epiApi";
-
-import SearchBar from "../../components/SearchBar";
-import Modal from "../../components/Modal"
+import { Search, Plus, Package, Edit2, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { toast } from "react-toastify";
+import styles from "./styles.module.css";
+import EpiModal from "./components/EpiModal";
 import Pagination from "../../components/Pagination";
 
-
-const initialState = {
-  nome: "",
-  categoria: "",
-  ca: "",
-  validadeCA: "",
-  estoqueAtual: 0,
-  estoqueMinimo: 0,
-  status: "OK",
-};
-
-function EpiModal({ isOpen, onClose, onSave, epi }) {
-  const [form, setForm] = useState(initialState);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (epi) {
-      // Garantir que tenhamos as chaves esperadas
-      setForm({ ...initialState, ...epi });
-    } else {
-      setForm(initialState);
-    }
-  }, [epi]);
-
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    try {
-      setSaving(true);
-
-      // Normalizar valor numérico
-      const novoPP = parseFloat(String(form.estoqueMinimo || "0"));
-      if (!isFinite(novoPP) || novoPP < 0) {
-        setError("Valor inválido para Estoque Mínimo");
-        setSaving(false);
-        return;
-      }
-
-      // Chama a API para atualizar no NEXTSI e usa o retorno para atualizar status/estoque
-      const resp = await atualizarEstoqueMinimo(form.codigo, novoPP);
-
-      // Notifica o pai para atualizar a lista (onSave espera o objeto atualizado)
-      if (typeof onSave === "function") {
-        const updated = {
-          ...form,
-          estoqueMinimo: novoPP,
-          estoqueAtual: resp.estoqueAtual ?? form.estoqueAtual,
-          status: resp.status ?? form.status,
-        };
-        onSave(updated);
-      }
-
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setError(err?.message || "Erro ao salvar");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={epi ? "Editar EPI" : "Novo EPI"}
-    >
-      <form className={modal.form} onSubmit={handleSubmit}>
-        <div className={modal.group}>
-          <label>Codigo</label>
-          <input
-            name="codigo"
-            value={form.codigo}
-            onChange={handleChange}
-            readOnly
-          />
-        </div>
-        <div className={modal.group}>
-          <label>Nome</label>
-          <input
-            name="nome"
-            value={form.nome}
-            onChange={handleChange}
-            readOnly
-          />
-        </div>
-
-        <div className={modal.group}>
-          <label>Tipo</label>
-          <input
-            name="tipo"
-            value={form.tipo}
-            onChange={handleChange}
-            readOnly
-          />
-        </div>
-
-        <div className={modal.group}>
-          <label>Validade</label>
-          <input
-            name="validadeCA"
-            value={form.validadeCA}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className={modal.group}>
-          <label>Estoque Atual</label>
-          <input
-            name="estoqueAtual"
-            value={form.estoqueAtual}
-            onChange={handleChange}
-            readOnly
-          />
-        </div>
-
-        <div className={modal.group}>
-          <label>Estoque Minímo</label>
-          <input
-            name="estoqueMinimo"
-            value={form.estoqueMinimo}
-            onChange={handleChange}
-          />
-        </div>
-
-        {error && <div className={modal.formError}>{error}</div>}
-
-        <div className={modal.actions}>
-          <button type="button" onClick={onClose} disabled={saving}>
-            Cancelar
-          </button>
-          <button type="submit" className={modal.primary} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar"}
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
-function EpiTable({ dados, onEdit }) {
-  return (
-    <div className={table.tableWrapper}>
-      <table>
-        <thead>
-          <tr className={table.headerRow}>
-            <th className={table.estoque}>Código</th>
-            <th className={table.estoque}>Nome</th>
-            <th className={table.estoque}>Tipo</th>
-            <th className={table.estoque}>Validade CA</th>
-            <th className={table.estoque}>Estoque Atual</th>
-            <th className={table.estoque}>Estoque Mínimo</th>
-            <th className={table.estoque}>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {dados && dados.length > 0 ? (
-            dados.map((f) => (
-              <tr key={f.id}>
-                <td>{f.codigo || "-"}</td>
-                <td>{f.nome || "-"}</td>
-                <td className={table.estoque}>{f.tipo || "-"}</td>
-                <td className={table.estoque}>
-                  {f.validadeCA
-                    ? new Date(f.validadeCA).toLocaleDateString("pt-BR")
-                    : "-"}
-                </td>
-                <td className={table.estoque}>{f.estoqueAtual ?? 0}</td>
-                <td>{f.estoqueMinimo ?? 0}</td>
-                <td className={table.estoque}>
-                  <span
-                    className={`${table.status} ${
-                      table[f.status?.toLowerCase().replace(/\s/g, "-") || "ok"]
-                    }`}
-                  >
-                    {f.status || "OK"}
-                  </span>
-                </td>
-                <td className={table.actions}>
-                  <button className={table.editBtn} onClick={() => onEdit(f)}>
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
-                Nenhum EPI encontrado
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+import { listarEpis } from "../../services/epiApi";
 
 export default function EPIs() {
+  const [epis, setEpis] = useState([]);
   const [search, setSearch] = useState("");
-  const [epi, setEpi] = useState([]);
-  const [epiFiltrados, setEpiFiltrados] = useState([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedEpi, setSelectedEpi] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEpi, setSelectedEpi] = useState(null);
+
+  // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Carrega EPIs do banco e seus saldos do ERP
   useEffect(() => {
     carregarEpis();
   }, []);
-
-  // Filtra EPIs conforme o usuário digita
-  useEffect(() => {
-    const filtrados = epi.filter(
-      (e) =>
-        (e.nome && e.nome.toLowerCase().includes(search.toLowerCase())) ||
-        (e.tipo && e.tipo.toLowerCase().includes(search.toLowerCase())) ||
-        (e.codigo && e.codigo.toLowerCase().includes(search.toLowerCase())) ||
-        (e.descricao &&
-          e.descricao.toLowerCase().includes(search.toLowerCase()))
-    );
-    setEpiFiltrados(filtrados);
-    setCurrentPage(1);
-  }, [search, epi]);
-
-  // Calcula os dados da página atual
-  const episPaginados = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return epiFiltrados.slice(startIndex, endIndex);
-  }, [currentPage, epiFiltrados, itemsPerPage]);
 
   async function carregarEpis() {
     try {
       setLoading(true);
       setError(null);
-
-      // Carrega EPIs com saldos já combinados do backend
-      // Backend retorna: { codigo, nome, tipo, estoqueAtual, status, ... }
-      const epis = await listarEpis();
-
-      // Dados já vêm do backend com saldos + status calculados
-      setEpi(epis);
+      const data = await listarEpis();
+      setEpis(data);
     } catch (err) {
       console.error("Erro ao carregar EPIs:", err);
-      setError(
-        err.message ||
-          "Erro ao carregar EPIs. Verifique a conexão com o backend."
-      );
+      setError("Não foi possível carregar os equipamentos. Verifique sua conexão.");
     } finally {
       setLoading(false);
     }
   }
 
-  function handleAdd() {
-    setSelectedEpi(null);
-    setOpenModal(true);
-  }
+  // Filtragem
+  const filteredEpis = useMemo(() => {
+    return epis.filter(e =>
+      (e.nome && e.nome.toLowerCase().includes(search.toLowerCase())) ||
+      (e.tipo && e.tipo.toLowerCase().includes(search.toLowerCase())) ||
+      (e.codigo && e.codigo.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [search, epis]);
 
-  function handleEdit(epi) {
+  // Paginação
+  const episPaginados = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredEpis.slice(startIndex, startIndex + itemsPerPage);
+  }, [currentPage, filteredEpis]);
+
+  const handleEdit = (epi) => {
     setSelectedEpi(epi);
-    setOpenModal(true);
-  }
+    setIsModalOpen(true);
+  };
 
-  function handleSave(data) {
-    if (selectedEpi) {
-      // editar
-      setEpi((prev) =>
-        prev.map((f) => (f.id === selectedEpi.id ? { ...data, id: f.id } : f))
-      );
-    } else {
-      // adicionar
-      setEpi((prev) => [...prev, { ...data, id: Date.now(), status: "OK" }]);
-    }
-  }
+  const handleSave = (updatedEpi) => {
+    setEpis(prev => prev.map(e => e.codigo === updatedEpi.codigo ? updatedEpi : e));
+    toast.success("Estoque sincronizado com sucesso!");
+  };
+
+  const getStatusClass = (status) => {
+    const s = status?.toLowerCase() || "";
+    if (s.includes("crítico") || s.includes("baixo")) return styles.statusCritical;
+    if (s.includes("alerta")) return styles.statusWarning;
+    return styles.statusOK;
+  };
+
+  const getDotClass = (status) => {
+    const s = status?.toLowerCase() || "";
+    if (s.includes("crítico") || s.includes("baixo")) return styles.dotCritical;
+    if (s.includes("alerta")) return styles.dotWarning;
+    return styles.dotOK;
+  };
 
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loadingMessage}>Carregando EPIs...</div>
+        <div className={styles.loadingContainer}>
+          <Loader2 size={40} className={styles.spin} />
+          <p>Sincronizando estoque com ERP...</p>
+        </div>
       </div>
     );
   }
@@ -306,11 +92,10 @@ export default function EPIs() {
   if (error) {
     return (
       <div className={styles.container}>
-        <div className={styles.errorMessage}>
-          {error}
-          <button onClick={carregarEpis} className={styles.retryBtn}>
-            Tentar Novamente
-          </button>
+        <div className={styles.errorContainer}>
+          <AlertCircle size={40} color="#ef4444" />
+          <p>{error}</p>
+          <button onClick={carregarEpis} className={styles.retryBtn}>Tentar Novamente</button>
         </div>
       </div>
     );
@@ -318,34 +103,110 @@ export default function EPIs() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h1>EPIs</h1>
-        <button className={styles.addBtn} onClick={handleAdd}>
-          + Adicionar EPI
-        </button>
-      </header>
+      
+      {/* Header Controls */}
+      <div className={styles.headerControls}>
+        <div className={styles.searchWrapper}>
+          <Search className={styles.searchIcon} size={20} />
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="Buscar por nome, tipo ou código ERP..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+      </div>
 
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder={"Buscar EPI..."}
-      />
+      {/* Rich Table */}
+      <div className={styles.tableCard}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Equipamento</th>
+              <th>Categoria</th>
+              <th>Validade CA</th>
+              <th>Estoque (Saldo)</th>
+              <th>Status</th>
+              <th style={{textAlign: 'right'}}>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {episPaginados.length > 0 ? (
+              episPaginados.map((e) => (
+                <tr key={e.codigo || e.id}>
+                  <td>
+                    <div className={styles.epiProfile}>
+                      <div className={styles.iconBox}>
+                        <ShieldCheck size={20} />
+                      </div>
+                      <div className={styles.epiInfo}>
+                        <span className={styles.epiName}>{e.nome}</span>
+                        <span className={styles.epiCode}>CÓD: {e.codigo}</span>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <td><span className={styles.badge}>{e.tipo || "Geral"}</span></td>
+                  
+                  <td style={{color: '#64748b', fontSize: '0.85rem'}}>
+                    {e.validadeCA ? new Date(e.validadeCA).toLocaleDateString("pt-BR") : "-"}
+                  </td>
 
-      <EpiTable dados={episPaginados} onEdit={handleEdit} />
+                  <td>
+                    <div className={styles.stockInfo}>
+                      <span className={styles.stockMain}>{e.estoqueAtual ?? 0} un</span>
+                      <span className={styles.stockMin}>Mín: {e.estoqueMinimo ?? 0}</span>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div className={getStatusClass(e.status)}>
+                      <div className={`${styles.dot} ${getDotClass(e.status)}`}></div>
+                      {e.status || "OK"}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div className={styles.actions}>
+                      <button className={styles.actionBtn} onClick={() => handleEdit(e)} title="Configurar Alerta">
+                        <Edit2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6">
+                  <div className={styles.emptyState}>
+                    <Package size={48} strokeWidth={1} />
+                    <p>Nenhum equipamento encontrado para "{search}"</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       <Pagination 
-        totalItems={epiFiltrados.length}
+        totalItems={filteredEpis.length}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
         maxPagesVisible={5}
       />
 
       <EpiModal
-        isOpen={openModal}
-        onClose={() => setOpenModal(false)}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         epi={selectedEpi}
       />
+
     </div>
   );
 }

@@ -19,7 +19,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 import styles from "./styles.module.css";
-import modalStyles from "./modal.module.css";
+import EpiSelectModal from "./components/EpiSelectModal";
 
 // MOCKS
 import funcionariosMock from "../../data/funcionarioMock";
@@ -54,7 +54,6 @@ export default function Devolucao() {
   // Modal de Seleção de EPIs
   const [isModalSelectEpiOpen, setIsModalSelectEpiOpen] = useState(false);
   const [episDisponiveis, setEpisDisponiveis] = useState([]);
-  const [epiBuscaModal, setEpiBuscaModal] = useState("");
   const [loadingEpis, setLoadingEpis] = useState(false);
 
   // Lista de Itens a Devolver
@@ -92,15 +91,8 @@ export default function Devolucao() {
     }
   };
 
-  // Filtra EPIs no modal
-  const episFiltrados = useMemo(() => {
-    if (!epiBuscaModal) return episDisponiveis;
-    return episDisponiveis.filter(epi =>
-      (epi.nome && epi.nome.toLowerCase().includes(epiBuscaModal.toLowerCase())) ||
-      (epi.codigo && epi.codigo.toLowerCase().includes(epiBuscaModal.toLowerCase())) ||
-      (epi.tipo && epi.tipo.toLowerCase().includes(epiBuscaModal.toLowerCase()))
-    );
-  }, [epiBuscaModal, episDisponiveis]);
+  // Filtra EPIs no modal - Não é mais necessário aqui pois foi movido para o modal
+  // Mas precisamos manter a lógica de carregar EPIs para passar a lista bruta
 
   // Filtragem de funcionários para a busca
   const funcionariosFiltrados = useMemo(() => {
@@ -132,7 +124,6 @@ export default function Devolucao() {
 
   const handleAdicionarItem = () => {
     setIsModalSelectEpiOpen(true);
-    setEpiBuscaModal("");
   };
 
   const handleSelecionarEpi = (epi) => {
@@ -452,78 +443,13 @@ export default function Devolucao() {
         </main>
 
         {/* MODAL DE SELEÇÃO DE EPIs */}
-        {isModalSelectEpiOpen && (
-          <div className={modalStyles.modalOverlay} onClick={() => setIsModalSelectEpiOpen(false)}>
-            <div className={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
-              <div className={modalStyles.modalHeader}>
-                <h2>Selecionar Equipamento</h2>
-                <button className={modalStyles.closeBtn} onClick={() => setIsModalSelectEpiOpen(false)}>
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className={modalStyles.modalBody}>
-                <div className={modalStyles.searchContainer}>
-                  <Search size={18} />
-                  <input
-                    type="text"
-                    placeholder="Buscar por nome, código ou tipo..."
-                    value={epiBuscaModal}
-                    onChange={(e) => setEpiBuscaModal(e.target.value)}
-                    className={modalStyles.searchInput}
-                  />
-                </div>
-
-                {loadingEpis ? (
-                  <div className={modalStyles.loadingState}>
-                    <p>Carregando equipamentos...</p>
-                  </div>
-                ) : (
-                  <div className={modalStyles.tableContainer}>
-                    <table className={modalStyles.epiTable}>
-                      <thead>
-                        <tr>
-                          <th>Código</th>
-                          <th>Nome</th>
-                          <th>Tipo</th>
-                          <th>Estoque</th>
-                          <th>Ação</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {episFiltrados && episFiltrados.length > 0 ? (
-                          episFiltrados.map(epi => (
-                            <tr key={epi.id || epi.codigo}>
-                              <td>{epi.codigo || '-'}</td>
-                              <td>{epi.nome || '-'}</td>
-                              <td>{epi.tipo || '-'}</td>
-                              <td>{epi.estoqueAtual ?? '-'}</td>
-                              <td>
-                                <button
-                                  className={modalStyles.selectBtn}
-                                  onClick={() => handleSelecionarEpi(epi)}
-                                >
-                                  <Plus size={16} />
-                                  Selecionar
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
-                              Nenhum equipamento encontrado
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <EpiSelectModal
+          isOpen={isModalSelectEpiOpen}
+          onClose={() => setIsModalSelectEpiOpen(false)}
+          onSelect={handleSelecionarEpi}
+          epis={episDisponiveis}
+          loading={loadingEpis}
+        />
       </div>
     </div>
   );
