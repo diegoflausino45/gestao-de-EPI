@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './styles.module.css';
 import BiometriaService from '../../services/BiometriaService';
-import { Fingerprint } from 'lucide-react'; // Usando ícone padrão da biblioteca
+import { Fingerprint, ScanFace, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 export default function BiometriaAuthModal({ isOpen, onClose, onSuccess, userTemplate, userName }) {
     const [status, setStatus] = useState('idle'); // idle, scanning, success, error
@@ -42,7 +42,7 @@ export default function BiometriaAuthModal({ isOpen, onClose, onSuccess, userTem
                 setTimeout(() => {
                     onSuccess();
                     onClose();
-                }, 1000);
+                }, 1200);
             } else {
                 setStatus('error');
                 setMessage('Biometria não confere. Tente novamente.');
@@ -58,18 +58,33 @@ export default function BiometriaAuthModal({ isOpen, onClose, onSuccess, userTem
     return (
         <div className={styles.overlay}>
             <div className={styles.modal}>
-                <h3>Autenticação Biométrica</h3>
-                <p>Confirme a identidade de <strong>{userName}</strong></p>
-
-                <div className={styles.iconContainer}>
-                    {status === 'scanning' && <div className={styles.fingerprint}><Fingerprint size={64} color="#007bff" /></div>}
-                    {status === 'success' && <Fingerprint size={64} color="#28a745" />}
-                    {status === 'error' && <Fingerprint size={64} color="#dc3545" />}
-                    {status === 'idle' && <Fingerprint size={64} color="#666" />}
+                
+                <div className={styles.header}>
+                    <div className={styles.iconWrapper}>
+                        <ScanFace size={24} color="#2563eb" />
+                    </div>
+                    <h3>Autenticação Biométrica</h3>
                 </div>
 
-                <div className={status === 'error' ? styles.errorText : styles.statusText}>
-                    {message}
+                <p className={styles.description}>
+                    Confirme a identidade de <strong>{userName}</strong> para concluir a operação.
+                </p>
+
+                <div className={styles.scanContainer}>
+                    {status === 'scanning' && (
+                        <div className={styles.scannerAnimation}>
+                            <Fingerprint size={80} className={styles.fingerprintBase} />
+                            <div className={styles.scanLine}></div>
+                        </div>
+                    )}
+                    {status === 'success' && <CheckCircle size={80} className={styles.iconSuccess} />}
+                    {status === 'error' && <XCircle size={80} className={styles.iconError} />}
+                    {status === 'idle' && <Fingerprint size={80} className={styles.fingerprintIdle} />}
+                </div>
+
+                <div className={`${styles.statusBadge} ${styles[status]}`}>
+                    {status === 'scanning' && <Loader2 size={16} className={styles.spin} />}
+                    <span>{message}</span>
                 </div>
 
                 <div className={styles.actions}>

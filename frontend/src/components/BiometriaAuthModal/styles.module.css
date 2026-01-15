@@ -1,82 +1,207 @@
 .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000; /* Acima de tudo */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .modal {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    width: 400px;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  text-align: center;
+  align-items: center;
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.iconContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px;
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
-.fingerprint {
-    width: 80px;
-    height: 80px;
-    opacity: 0.6;
-    animation: pulse 2s infinite;
+.iconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 6px #f8fafc;
 }
 
-@keyframes pulse {
-    0% { transform: scale(0.95); opacity: 0.5; }
-    50% { transform: scale(1.05); opacity: 0.8; }
-    100% { transform: scale(0.95); opacity: 0.5; }
+.header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
 }
 
-.statusText {
-    font-size: 1.1rem;
-    color: #333;
-    font-weight: 500;
+.description {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+  max-width: 80%;
 }
 
-.errorText {
-    color: #d32f2f;
-    font-size: 0.9rem;
-    background: #ffebee;
-    padding: 0.5rem;
-    border-radius: 4px;
+.description strong {
+  color: #1e293b;
+  font-weight: 600;
 }
 
+/* SCAN CONTAINER & ANIMATIONS */
+.scanContainer {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.scannerAnimation {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fingerprintBase {
+  color: #cbd5e1;
+  opacity: 0.5;
+}
+
+.scanLine {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #2563eb, transparent);
+  box-shadow: 0 0 10px #2563eb;
+  top: 0;
+  animation: scanMove 1.5s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+.fingerprintIdle {
+  color: #94a3b8;
+}
+
+.iconSuccess {
+  color: #16a34a;
+  animation: scaleBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.iconError {
+  color: #ef4444;
+  animation: shake 0.4s ease-in-out;
+}
+
+/* STATUS BADGE */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.statusBadge.idle { background-color: #f1f5f9; color: #64748b; }
+.statusBadge.scanning { background-color: #eff6ff; color: #2563eb; }
+.statusBadge.success { background-color: #dcfce7; color: #166534; }
+.statusBadge.error { background-color: #fee2e2; color: #991b1b; }
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ACTIONS */
 .actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 1rem;
+  display: flex;
+  gap: 12px;
+  width: 100%;
 }
 
 .btnCancel {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ccc;
-    background: transparent;
-    border-radius: 4px;
-    cursor: pointer;
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #64748b;
+  background: white;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btnCancel:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.btnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btnRetry {
-    padding: 0.5rem 1rem;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: white;
+  background: #2563eb;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
 }
+
+.btnRetry:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* KEYFRAMES */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes scanMove {
+  0%, 100% { top: 10%; opacity: 0; }
+  50% { opacity: 1; }
+  100% { top: 90%; opacity: 0; }
+}
+@keyframes scaleBounce {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

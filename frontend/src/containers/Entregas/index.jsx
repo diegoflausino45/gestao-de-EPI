@@ -1,317 +1,373 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { 
+  Search, 
+  User, 
+  Calendar, 
+  Package, 
+  Trash2, 
+  Plus, 
+  CheckCircle,
+  Clock,
+  ChevronDown
+} from "lucide-react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+
 import styles from "./styles.module.css";
-import modalcss from "./modalcss.module.css";
-import table from "./table.module.css";
-
-import SearchBar from "../../components/SearchBar";
-import Modal from "../../components/Modal";
+import EntregaEpiSelectModal from "./components/EntregaEpiSelectModal";
 import BiometriaAuthModal from "../../components/BiometriaAuthModal";
+import { useAuth } from "../../context/AuthContext";
 
-import { entregasMock } from "../../data/entregasMock";
-import { funcionariosMock } from "../../data/funcionarioMock"; // Caminho corrigido para 4 níveis
+// MOCKS & SERVICES
+import funcionariosMock from "../../data/funcionarioMock";
+import { epiMock } from "../../data/epiMock";
+import { listarEpis } from "../../services/epiApi";
 
+export default function Entregas() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-const initialState = {
-  funcionario: {
-    nome: ""
-  },
-  epi: {
-    nome: ""
-  },
-  quantidade: 1,
-  dataEntrega: "",
-  responsavel: ""
-};
-
-function EntregasModal({
-                                        isOpen,
-                                        onClose,
-                                        onSave,
-                                        entrega
-                                      }) {
-  const [form, setForm] = useState(initialState);
+  // ESTADOS PRINCIPAIS
+  const [busca, setBusca] = useState("");
+  const [funcionarioSelecionado, setFuncionarioSelecionado] = useState(null);
+  const [dataEntrega, setDataEntrega] = useState(new Date().toISOString().split('T')[0]);
+  const [responsavel] = useState(user?.nome || "Almoxarife");
   
-  // Controle da Autenticação Biométrica
-  const [showBioAuth, setShowBioAuth] = useState(false);
-  const [currentUserTemplate, setCurrentUserTemplate] = useState(null);
+  // Modal de Seleção de Itens
+  const [isModalSelectEpiOpen, setIsModalSelectEpiOpen] = useState(false);
+  const [episDisponiveis, setEpisDisponiveis] = useState([]);
+  const [loadingEpis, setLoadingEpis] = useState(false);
 
-  // Carrega os dados quando abre o modal para edição
+  // Modal de Biometria
+  const [isBioModalOpen, setIsBioModalOpen] = useState(false);
+
+  // Cesta de Itens
+  const [cesta, setCesta] = useState([]);
+
+  // Carrega EPIs apenas quando abre o modal (lazy load)
   useEffect(() => {
-    if (entrega) {
-      setForm(entrega);
-    } else {
-      setForm(initialState);
+    if (isModalSelectEpiOpen) {
+      carregarEpis();
     }
-    // Resetar estados auxiliares ao abrir/fechar
-    setShowBioAuth(false);
-    setCurrentUserTemplate(null);
-  }, [entrega, isOpen]);
+  }, [isModalSelectEpiOpen]);
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-
-    if (name === "nome") {
-      setForm((prev) => ({
-        ...prev,
-        funcionario: { ...prev.funcionario, nome: value }
-      }));
-      return;
+  const carregarEpis = async () => {
+    try {
+      setLoadingEpis(true);
+      const epis = await listarEpis();
+      setEpisDisponiveis(epis);
+    } catch (err) {
+      console.error("Erro ao carregar EPIs:", err);
+      setEpisDisponiveis(epiMock); // Fallback
+    } finally {
+      setLoadingEpis(false);
     }
+  };
 
-    if (name === "epi.nome") {
-      setForm((prev) => ({
-        ...prev,
-        epi: { ...prev.epi, nome: value }
-      }));
-      return;
-    }
+  // BUSCA DE FUNCIONÁRIOS
+  const funcionariosFiltrados = useMemo(() => {
+    if (!busca || funcionarioSelecionado) return [];
+    return funcionariosMock.filter(f => 
+      f.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      f.setor.toLowerCase().includes(busca.toLowerCase())
+    ).slice(0, 5);
+  }, [busca, funcionarioSelecionado]);
 
-    setForm((prev) => ({ ...prev, [name]: value }));
-  }
+  // AÇÕES
+  const handleSelecionarFuncionario = (func) => {
+    setFuncionarioSelecionado(func);
+    setBusca(func.nome);
+  };
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  const handleLimparFuncionario = () => {
+    setFuncionarioSelecionado(null);
+    setBusca("");
+    setCesta([]); // Limpa cesta se mudar o funcionário (opcional, mas seguro)
+  };
+
+  const handleAdicionarItem = (epi) => {
+    // Verifica se já existe na cesta
+    const existe = cesta.find(item => item.id === epi.id || item.codigo === epi.codigo);
     
-    // 1. Busca o funcionário no Mock para ver se tem digital
-    // (Num sistema real, o backend retornaria isso ou o ID viria de um select)
-    const funcionarioEncontrado = funcionariosMock.find(
-        f => f.nome.toLowerCase() === form.funcionario.nome.toLowerCase()
-    );
-
-    if (funcionarioEncontrado && funcionarioEncontrado.biometriaTemplate) {
-      // TEM DIGITAL: Exige autenticação
-      setCurrentUserTemplate(funcionarioEncontrado.biometriaTemplate);
-      setShowBioAuth(true);
-    } else {
-      // NÃO TEM DIGITAL ou NÃO ACHOU: Salva direto (ou poderia bloquear)
-      // Aqui vamos permitir salvar mas com um aviso no console
-      console.warn("Funcionário sem digital ou não encontrado. Salvando sem biometria.");
-      finalizarSalvamento();
+    if (existe) {
+      toast.info("Este item já está na cesta. Ajuste a quantidade.");
+      setIsModalSelectEpiOpen(false);
+      return;
     }
-  }
 
-  function finalizarSalvamento() {
-    onSave(form);
-    onClose();
-    setShowBioAuth(false);
-  }
+    setCesta(prev => [...prev, { 
+      ...epi, 
+      quantidade: 1, 
+      caEntrega: epi.ca || epi.CA || "", 
+      validadeEntrega: epi.validadeCA || "" 
+    }]);
+    setIsModalSelectEpiOpen(false);
+    toast.success(`${epi.nome} adicionado.`);
+  };
 
-  return (
-      <>
-        {/* Modal Principal de Edição */}
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={entrega ? "Editar Entrega" : "Nova Entrega"}
-        >
-          <form className={modalcss.form} onSubmit={handleSubmit}>
+  const handleRemoverItem = (codigo) => {
+    setCesta(prev => prev.filter(item => item.codigo !== codigo));
+  };
 
-            {/* Grupo Funcionário */}
-            <div className={modalcss.group}>
-              <label>Funcionário</label>
-              <input
-                  name="nome"
-                  placeholder="Nome do Colaborador (Ex: Carlos Souza)"
-                  value={form.funcionario.nome}
-                  onChange={handleChange}
-                  required
-                  list="funcionarios-list" // Datalist para facilitar teste
-              />
-              <datalist id="funcionarios-list">
-                {funcionariosMock.map(f => <option key={f.id} value={f.nome} />)}
-              </datalist>
-            </div>
+  const handleItemFieldChange = (codigo, field, value) => {
+    setCesta(prev => prev.map(item => 
+      item.codigo === codigo ? { ...item, [field]: value } : item
+    ));
+  };
 
-            {/* Grupo EPI */}
-            <div className={modalcss.group}>
-              <label>EPI</label>
-              <input
-                  name="epi.nome"
-                  placeholder="Nome do Equipamento"
-                  value={form.epi.nome}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
+  const handleQuantidadeChange = (codigo, delta) => {
+    setCesta(prev => prev.map(item => {
+      if (item.codigo === codigo) {
+        const novaQtd = Math.max(1, item.quantidade + delta);
+        if (novaQtd > (item.estoqueAtual || 999)) {
+          toast.warning("Quantidade excede o estoque atual.");
+          return item;
+        }
+        return { ...item, quantidade: novaQtd };
+      }
+      return item;
+    }));
+  };
 
-            {/* Grupo Quantidade (Number) */}
-            <div className={modalcss.group}>
-              <label>Quantidade</label>
-              <input
-                  name="quantidade"
-                  type="number"
-                  min="1"
-                  value={form.quantidade}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
+  const handleIniciarEntrega = () => {
+    if (!funcionarioSelecionado) return toast.error("Selecione um funcionário.");
+    if (cesta.length === 0) return toast.error("Adicione itens à entrega.");
 
-            {/* Grupo Data (Date Picker) */}
-            <div className={modalcss.group}>
-              <label>Data da Entrega</label>
-              <input
-                  name="dataEntrega"
-                  type="date"
-                  value={form.dataEntrega}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
+    setIsBioModalOpen(true);
+  };
 
-            {/* Grupo Responsável */}
-            <div className={modalcss.group}>
-              <label>Responsável pela Entrega</label>
-              <input
-                  name="responsavel"
-                  placeholder="Ex: Almoxarife"
-                  value={form.responsavel}
-                  onChange={handleChange}
-                  required
-              />
-            </div>
+  const handleConfirmarEntrega = () => {
+    // Aqui seria a chamada ao backend para salvar a entrega
+    toast.success("Entrega realizada com sucesso!");
+    // Reset total
+    setFuncionarioSelecionado(null);
+    setBusca("");
+    setCesta([]);
+    setIsBioModalOpen(false);
+  };
 
-            <div className={modalcss.actions}>
-              <button type="button" onClick={onClose}>
-                Cancelar
-              </button>
-              <button type="submit" className={modalcss.primary}>
-                Confirmar Entrega
-              </button>
-            </div>
-          </form>
-        </Modal>
-
-        {/* Modal de Autenticação Biométrica (Overlay) */}
-        <BiometriaAuthModal 
-            isOpen={showBioAuth}
-            onClose={() => setShowBioAuth(false)}
-            onSuccess={finalizarSalvamento}
-            userTemplate={currentUserTemplate}
-            userName={form.funcionario.nome}
-        />
-      </>
-  );
-}
-
-function EntregasTable({ dados = [], onView }) { // Valor padrão para evitar erro se dados for undefined
-
-  // Verifica se a lista está vazia para mostrar mensagem amigável
-  if (dados.length === 0) {
-    return (
-        <div className={table.tableWrapper}>
-          <p className={table.emptyMessage}>Nenhuma entrega encontrada.</p>
-        </div>
-    );
-  }
-
-  return (
-      <div className={table.tableWrapper}>
-        <table>
-          <thead>
-          <tr>
-            <th>Funcionário</th>
-            <th>EPI</th>
-            <th>Quantidade</th>
-            <th>Data</th>
-            <th>Responsável</th>
-            <th>Ações</th>
-          </tr>
-          </thead>
-
-          <tbody>
-          {dados.map((f) => (
-              <tr key={f.id}>
-                {/* O ?. evita erro se o objeto for nulo */}
-                <td>{f.funcionario?.nome || "---"}</td>
-                <td>{f.epi?.nome || "---"}</td>
-                <td>{f.quantidade}</td>
-                {/* Sugestão: Formatar a data para o padrão BR aqui ou no backend */}
-                <td>{f.dataEntrega}</td>
-                <td>{f.responsavel}</td>
-                <td className={table.actions}>
-                  <button className={table.viewBtn} onClick={() => onView(f)}>
-                    Visualizar
-                  </button>
-                </td>
-              </tr>
-          ))}
-          </tbody>
-        </table>
-      </div>
-  );
-}
-
-
-
-function Entregas() {
-  const [entregas, setEntregas] = useState(entregasMock);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedEntrega, setSelectedEntrega] = useState(null);
-  const [search, setSearch] = useState("");
-  const entregasFiltradas = entregas.filter(e =>
-    e.funcionario.nome.toLowerCase().includes(search.toLowerCase()) ||
-    e.epi.nome.toLowerCase().includes(search.toLowerCase()) ||
-    e.responsavel.toLowerCase().includes(search.toLowerCase())
-  );
-
-
-
-    function handleAdd() {
-    setSelectedEntrega(null);
-    setOpenModal(true);
-  }
-
-  function handleEdit(entregas) {
-    setSelectedEntrega(entregas);
-    setOpenModal(true);
-  }
-
-  function handleSave(data) {
-    if (selectedEntrega) {
-      // editar
-      setEntregas(prev =>
-        prev.map(f =>
-          f.id === selectedEntrega.id
-            ? { ...data, id: f.id }
-            : f
-        )
-      );
-    } else {
-      // adicionar
-      setEntregas(prev => [
-        ...prev,
-        { ...data, id: Date.now(), status: "ativo" }
-      ]);
-    }
-  }
+  const getInitials = (name) => {
+    return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+  };
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>Entregas</h1>
-        <button className={styles.addBtn} onClick={handleAdd}>
-          + Nova Entrega
-        </button>
+        <h1>Terminal de Entrega</h1>
+        <span className={styles.dateBadge}>
+          <Clock size={14} /> {new Date().toLocaleDateString('pt-BR')}
+        </span>
       </header>
 
-      <SearchBar value={search} onChange={setSearch} placeholder={"Buscar entrega..."} />
+      <div className={styles.grid}>
+        
+        {/* ESQUERDA: IDENTIFICAÇÃO */}
+        <aside className={styles.leftColumn}>
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <User size={18} />
+              <h3>Identificação do Colaborador</h3>
+            </div>
+            
+            <div className={styles.cardBody}>
+              {/* BUSCA */}
+              <div className={styles.searchWrapper}>
+                <Search className={styles.searchIcon} size={18} />
+                <input 
+                  type="text" 
+                  className={styles.searchInput}
+                  placeholder="Buscar funcionário..."
+                  value={busca}
+                  onChange={(e) => {
+                    setBusca(e.target.value);
+                    if (funcionarioSelecionado) setFuncionarioSelecionado(null);
+                  }}
+                />
+                
+                {/* DROPDOWN RESULTADOS */}
+                {funcionariosFiltrados.length > 0 && (
+                  <div className={styles.searchResults}>
+                    {funcionariosFiltrados.map(f => (
+                      <div 
+                        key={f.id} 
+                        className={styles.resultItem}
+                        onClick={() => handleSelecionarFuncionario(f)}
+                      >
+                        <div className={styles.avatarSmall}>{getInitials(f.nome)}</div>
+                        <div>
+                          <div className={styles.resName}>{f.nome}</div>
+                          <div className={styles.resRole}>{f.cargo}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-      <EntregasTable
-        dados={entregasFiltradas}
-        onView={handleEdit}
+              {/* CARD SELECIONADO */}
+              {funcionarioSelecionado && (
+                <div className={styles.employeeCard}>
+                  <div className={styles.avatarLarge}>
+                    {getInitials(funcionarioSelecionado.nome)}
+                  </div>
+                  <div className={styles.empInfo}>
+                    <h4>{funcionarioSelecionado.nome}</h4>
+                    <span className={styles.empDetail}>{funcionarioSelecionado.cargo}</span>
+                    <span className={styles.empDetail}>{funcionarioSelecionado.setor}</span>
+                  </div>
+                  <button onClick={handleLimparFuncionario} className={styles.changeBtn}>
+                    Alterar
+                  </button>
+                </div>
+              )}
+
+              {/* DADOS ADICIONAIS */}
+              <div className={styles.infoGroup}>
+                <label>Data da Entrega</label>
+                <div className={styles.inputWrapper}>
+                  <Calendar size={16} className={styles.inputIcon} />
+                  <input 
+                    type="date" 
+                    value={dataEntrega}
+                    onChange={(e) => setDataEntrega(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.infoGroup}>
+                <label>Responsável</label>
+                <div className={styles.inputWrapper}>
+                  <User size={16} className={styles.inputIcon} />
+                  <input 
+                    type="text" 
+                    value={responsavel}
+                    readOnly
+                    className={styles.readOnly}
+                  />
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </aside>
+
+        {/* DIREITA: CESTA DE ITENS */}
+        <main className={styles.rightColumn}>
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <Package size={18} />
+              <h3>Itens da Entrega</h3>
+              <div className={styles.itemCount}>
+                {cesta.length} {cesta.length === 1 ? 'item' : 'itens'}
+              </div>
+            </div>
+
+            <div className={styles.cardBody}>
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>EPI</th>
+                      <th style={{width: '120px'}}>CA</th>
+                      <th style={{width: '150px'}}>Validade</th>
+                      <th style={{textAlign: 'center'}}>Qtd.</th>
+                      <th style={{width: '40px'}}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cesta.length > 0 ? (
+                      cesta.map((item) => (
+                        <tr key={item.codigo}>
+                          <td>
+                            <div className={styles.itemMeta}>
+                              <span className={styles.itemName}>{item.nome}</span>
+                              <span className={styles.itemCode}>Cód: {item.codigo}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <input 
+                              type="text"
+                              className={styles.inlineInput}
+                              value={item.caEntrega}
+                              onChange={(e) => handleItemFieldChange(item.codigo, 'caEntrega', e.target.value)}
+                              placeholder="Nº CA"
+                            />
+                          </td>
+                          <td>
+                            <input 
+                              type="date"
+                              className={styles.inlineInput}
+                              value={item.validadeEntrega ? item.validadeEntrega.split('T')[0] : ''}
+                              onChange={(e) => handleItemFieldChange(item.codigo, 'validadeEntrega', e.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <div className={styles.qtyControl}>
+                              <button onClick={() => handleQuantidadeChange(item.codigo, -1)}>-</button>
+                              <span>{item.quantidade}</span>
+                              <button onClick={() => handleQuantidadeChange(item.codigo, 1)}>+</button>
+                            </div>
+                          </td>
+                          <td>
+                            <button className={styles.removeBtn} onClick={() => handleRemoverItem(item.codigo)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5">
+                          <div className={styles.emptyState}>
+                            <Package size={40} strokeWidth={1} />
+                            <p>Nenhum item adicionado à entrega.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <button className={styles.addItemBtn} onClick={() => setIsModalSelectEpiOpen(true)}>
+                <Plus size={18} /> Adicionar EPI
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.footerActions}>
+             <div className={styles.totalInfo}>
+                <span>Total de Itens:</span>
+                <strong>{cesta.reduce((acc, item) => acc + item.quantidade, 0)}</strong>
+             </div>
+             <button 
+               className={styles.confirmBtn} 
+               onClick={handleIniciarEntrega}
+               disabled={!funcionarioSelecionado || cesta.length === 0}
+             >
+               <CheckCircle size={20} /> Confirmar Entrega
+             </button>
+          </div>
+        </main>
+      </div>
+
+      {/* MODALS */}
+      <EntregaEpiSelectModal 
+        isOpen={isModalSelectEpiOpen}
+        onClose={() => setIsModalSelectEpiOpen(false)}
+        onSelect={handleAdicionarItem}
+        epis={episDisponiveis}
+        loading={loadingEpis}
       />
 
-      <EntregasModal
-        isOpen={openModal}
-        onClose={() => setOpenModal(false)}
-        onSave={handleSave}
-        entrega={selectedEntrega}
+      <BiometriaAuthModal 
+        isOpen={isBioModalOpen}
+        onClose={() => setIsBioModalOpen(false)}
+        onSuccess={handleConfirmarEntrega}
+        userTemplate={funcionarioSelecionado?.biometriaTemplate}
+        userName={funcionarioSelecionado?.nome}
       />
+
     </div>
   );
 }
-
-
-export  {EntregasTable, EntregasModal}
-export default Entregas
