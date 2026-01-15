@@ -5,12 +5,9 @@ import { useState, useEffect, useMemo } from "react";
 import { listarEpis, atualizarEstoqueMinimo } from "../../services/epiApi";
 
 import SearchBar from "../../components/SearchBar";
-<<<<<<< HEAD
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination";
-=======
-import Modal from "../../components/Modal";
->>>>>>> f4926e1ac61b58827e41585df561b0ec31d9ec84
+
 
 const initialState = {
   nome: "",
