@@ -5,8 +5,12 @@ import { useState, useEffect, useMemo } from "react";
 import { listarEpis, atualizarEstoqueMinimo } from "../../services/epiApi";
 
 import SearchBar from "../../components/SearchBar";
+<<<<<<< HEAD
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination";
+=======
+import Modal from "../../components/Modal";
+>>>>>>> f4926e1ac61b58827e41585df561b0ec31d9ec84
 
 const initialState = {
   nome: "",
@@ -15,10 +19,10 @@ const initialState = {
   validadeCA: "",
   estoqueAtual: 0,
   estoqueMinimo: 0,
-  status: "OK"
+  status: "OK",
 };
 
- function EpiModal({ isOpen, onClose, onSave, epi }) {
+function EpiModal({ isOpen, onClose, onSave, epi }) {
   const [form, setForm] = useState(initialState);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -153,52 +157,56 @@ const initialState = {
   );
 }
 
-
-
-function EpiTable({dados, onEdit}) {
-
+function EpiTable({ dados, onEdit }) {
   return (
     <div className={table.tableWrapper}>
       <table>
         <thead>
           <tr className={table.headerRow}>
-            <th>Código</th>
-            <th>Nome</th>
-            <th>Tipo</th>
-            <th>Validade CA</th>
-            <th>Estoque Atual</th>
-            <th>Estoque Mínimo</th>
-            <th>Status</th>
+            <th className={table.estoque}>Código</th>
+            <th className={table.estoque}>Nome</th>
+            <th className={table.estoque}>Tipo</th>
+            <th className={table.estoque}>Validade CA</th>
+            <th className={table.estoque}>Estoque Atual</th>
+            <th className={table.estoque}>Estoque Mínimo</th>
+            <th className={table.estoque}>Status</th>
             <th>Ações</th>
           </tr>
         </thead>
 
         <tbody>
           {dados && dados.length > 0 ? (
-            dados.map(f => (
-              <tr key={f.id} >
-                <td>{f.codigo || '-'}</td>
-                <td>{f.nome || '-'}</td>
-                <td>{f.tipo || '-'}</td>
-                <td>{f.validadeCA ? new Date(f.validadeCA).toLocaleDateString('pt-BR') : '-'}</td>
+            dados.map((f) => (
+              <tr key={f.id}>
+                <td>{f.codigo || "-"}</td>
+                <td>{f.nome || "-"}</td>
+                <td className={table.estoque}>{f.tipo || "-"}</td>
+                <td className={table.estoque}>
+                  {f.validadeCA
+                    ? new Date(f.validadeCA).toLocaleDateString("pt-BR")
+                    : "-"}
+                </td>
                 <td className={table.estoque}>{f.estoqueAtual ?? 0}</td>
                 <td>{f.estoqueMinimo ?? 0}</td>
-                <td>
-                  <span className={`${table.status} ${table[f.status?.toLowerCase().replace(/\s/g, '-') || 'ok']}`}>
-                    {f.status || 'OK'}
+                <td className={table.estoque}>
+                  <span
+                    className={`${table.status} ${
+                      table[f.status?.toLowerCase().replace(/\s/g, "-") || "ok"]
+                    }`}
+                  >
+                    {f.status || "OK"}
                   </span>
                 </td>
                 <td className={table.actions}>
                   <button className={table.editBtn} onClick={() => onEdit(f)}>
                     Editar
                   </button>
-
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="8" style={{textAlign: 'center', padding: '20px'}}>
+              <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
                 Nenhum EPI encontrado
               </td>
             </tr>
@@ -320,7 +328,11 @@ export default function EPIs() {
         </button>
       </header>
 
-      <SearchBar value={search} onChange={setSearch} placeholder={"Buscar EPI..."}/>
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder={"Buscar EPI..."}
+      />
 
       <EpiTable dados={episPaginados} onEdit={handleEdit} />
 
