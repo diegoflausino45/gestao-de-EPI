@@ -12,16 +12,21 @@ import {
   Activity,
   CalendarClock,
   UserX,
-  RefreshCw
+  RefreshCw,
+  X
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 import styles from "./styles.module.css";
+import modalStyles from "./modal.module.css";
 
 // MOCKS
-import { funcionariosMock } from "../../data/funcionarioMock";
+import funcionariosMock from "../../data/funcionarioMock";
 import { epiMock } from "../../data/epiMock";
+
+// SERVIÇOS
+import { listarEpis } from "../../services/epiApi";
 
 // Opções de Motivo para o Dropdown Rico
 const MOTIVOS = [
@@ -46,6 +51,12 @@ export default function Devolucao() {
   const [isMotivoOpen, setIsMotivoOpen] = useState(false);
   const motivoDropdownRef = useRef(null);
 
+  // Modal de Seleção de EPIs
+  const [isModalSelectEpiOpen, setIsModalSelectEpiOpen] = useState(false);
+  const [episDisponiveis, setEpisDisponiveis] = useState([]);
+  const [epiBuscaModal, setEpiBuscaModal] = useState("");
+  const [loadingEpis, setLoadingEpis] = useState(false);
+
   // Lista de Itens a Devolver
   const [itensParaDevolver, setItensParaDevolver] = useState([]);
 
@@ -59,6 +70,37 @@ export default function Devolucao() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Carrega EPIs quando abre o modal
+  useEffect(() => {
+    if (isModalSelectEpiOpen) {
+      carregarEpis();
+    }
+  }, [isModalSelectEpiOpen]);
+
+  const carregarEpis = async () => {
+    try {
+      setLoadingEpis(true);
+      const epis = await listarEpis();
+      setEpisDisponiveis(epis);
+    } catch (err) {
+      console.error("Erro ao carregar EPIs:", err);
+      // Fallback para mock em caso de erro
+      setEpisDisponiveis(epiMock);
+    } finally {
+      setLoadingEpis(false);
+    }
+  };
+
+  // Filtra EPIs no modal
+  const episFiltrados = useMemo(() => {
+    if (!epiBuscaModal) return episDisponiveis;
+    return episDisponiveis.filter(epi =>
+      (epi.nome && epi.nome.toLowerCase().includes(epiBuscaModal.toLowerCase())) ||
+      (epi.codigo && epi.codigo.toLowerCase().includes(epiBuscaModal.toLowerCase())) ||
+      (epi.tipo && epi.tipo.toLowerCase().includes(epiBuscaModal.toLowerCase()))
+    );
+  }, [epiBuscaModal, episDisponiveis]);
 
   // Filtragem de funcionários para a busca
   const funcionariosFiltrados = useMemo(() => {
@@ -89,9 +131,14 @@ export default function Devolucao() {
   };
 
   const handleAdicionarItem = () => {
-    const novoItem = epiMock[Math.floor(Math.random() * epiMock.length)];
-    setItensParaDevolver(prev => [...prev, { ...novoItem, id: Date.now(), estado: 'bom', observacao: '' }]);
-    toast.info("Item adicionado à lista.");
+    setIsModalSelectEpiOpen(true);
+    setEpiBuscaModal("");
+  };
+
+  const handleSelecionarEpi = (epi) => {
+    setItensParaDevolver(prev => [...prev, { ...epi, id: Date.now(), estado: 'bom', observacao: '' }]);
+    setIsModalSelectEpiOpen(false);
+    toast.success(`${epi.nome} adicionado à lista.`);
   };
 
   const handleRemoverItem = (id) => {
@@ -327,7 +374,7 @@ export default function Devolucao() {
                         <td>
                           <div className={styles.itemInfo}>
                             <h5>{item.nome}</h5>
-                            <span>{item.ca || "CA não informado"}</span>
+                            <span>{item.CA || item.ca || "CA não informado"}</span>
                           </div>
                           {/* Campo de observação condicional para itens danificados/inutilizáveis */}
                           {(item.estado === 'danificado' || item.estado === 'inutilizavel') && (
@@ -404,6 +451,79 @@ export default function Devolucao() {
           </div>
         </main>
 
+        {/* MODAL DE SELEÇÃO DE EPIs */}
+        {isModalSelectEpiOpen && (
+          <div className={modalStyles.modalOverlay} onClick={() => setIsModalSelectEpiOpen(false)}>
+            <div className={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+              <div className={modalStyles.modalHeader}>
+                <h2>Selecionar Equipamento</h2>
+                <button className={modalStyles.closeBtn} onClick={() => setIsModalSelectEpiOpen(false)}>
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className={modalStyles.modalBody}>
+                <div className={modalStyles.searchContainer}>
+                  <Search size={18} />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome, código ou tipo..."
+                    value={epiBuscaModal}
+                    onChange={(e) => setEpiBuscaModal(e.target.value)}
+                    className={modalStyles.searchInput}
+                  />
+                </div>
+
+                {loadingEpis ? (
+                  <div className={modalStyles.loadingState}>
+                    <p>Carregando equipamentos...</p>
+                  </div>
+                ) : (
+                  <div className={modalStyles.tableContainer}>
+                    <table className={modalStyles.epiTable}>
+                      <thead>
+                        <tr>
+                          <th>Código</th>
+                          <th>Nome</th>
+                          <th>Tipo</th>
+                          <th>Estoque</th>
+                          <th>Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {episFiltrados && episFiltrados.length > 0 ? (
+                          episFiltrados.map(epi => (
+                            <tr key={epi.id || epi.codigo}>
+                              <td>{epi.codigo || '-'}</td>
+                              <td>{epi.nome || '-'}</td>
+                              <td>{epi.tipo || '-'}</td>
+                              <td>{epi.estoqueAtual ?? '-'}</td>
+                              <td>
+                                <button
+                                  className={modalStyles.selectBtn}
+                                  onClick={() => handleSelecionarEpi(epi)}
+                                >
+                                  <Plus size={16} />
+                                  Selecionar
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                              Nenhum equipamento encontrado
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
