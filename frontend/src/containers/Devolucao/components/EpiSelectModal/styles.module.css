@@ -16,7 +16,7 @@
 .modal {
   background: white;
   width: 100%;
-  max-width: 750px;
+  max-width: 1000px;
   border-radius: 12px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -105,7 +105,7 @@
   border: 1px solid #f1f5f9;
   border-radius: 8px;
   overflow-y: auto;
-  max-height: 400px;
+  max-height: 500px;
 }
 
 .table {
@@ -165,21 +165,24 @@
 .selectBtn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #dcfce7;
   border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
 }
 
 .selectBtn:hover {
-  background-color: #1d4ed8;
+  background-color: #16a34a;
+  color: white;
+  border-color: #16a34a;
   transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
 }
 
 .loadingState, .emptyState {

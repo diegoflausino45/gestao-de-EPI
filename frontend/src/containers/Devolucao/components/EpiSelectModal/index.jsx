@@ -79,9 +79,9 @@ export default function EpiSelectModal({ isOpen, onClose, onSelect, epis = [], l
                           <button
                             className={styles.selectBtn}
                             onClick={() => onSelect(epi)}
+                            title="Selecionar este item"
                           >
-                            <Plus size={16} />
-                            Selecionar
+                            <Plus size={18} />
                           </button>
                         </div>
                       </td>
