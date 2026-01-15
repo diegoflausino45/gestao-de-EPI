@@ -6,6 +6,7 @@ import {
   FiUsers,
   FiSettings,
   FiLogOut,
+  FiRotateCcw,
 } from "react-icons/fi";
 
 import { NavLink } from "react-router-dom";
@@ -25,6 +26,7 @@ function SideBar() {
           <NavItem to="/funcionarios" icon={<FiUsers />} label="Funcionários" />
           <NavItem to="/epis" icon={<FiBox />} label="EPI's" />
           <NavItem to="/entregas" icon={<FiTruck />} label="Entregas" />
+          <NavItem to="/devolucoes" icon={<FiRotateCcw />} label="Devoluções" />
           <NavItem to="/relatorios" icon={<FiBarChart2 />} label="Relatórios" />
           <NavItem to="/configuracoes" icon={<FiSettings />} label="Configurações" />
         </ul>
