@@ -1,21 +1,26 @@
 /* Layout Principal */
 .layoutContainer {
     display: flex;
-    min-height: 100vh;
-    background-color: #f3f4f6; /* Fundo cinza claro global */
+    height: 100vh; /* Ocupa exatamente a altura da tela */
+    overflow: hidden; /* Impede scroll na janela principal */
+    background-color: #f3f4f6;
 }
 
-/* Área à direita da Sidebar (Header + Conteúdo) */
+/* Área à direita da Sidebar (Wrapper da Coluna) */
 .mainContent {
     flex: 1;
-    margin-left: 250px; /* Mesma largura da Sidebar */
+    margin-left: 250px;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* Impede overflow horizontal flexbox */
+    height: 100vh;
+    overflow: hidden; /* Header fica fixo aqui */
+    min-width: 0;
 }
 
-/* Conteúdo da Página (com padding) */
+/* Área de Scroll (Abaixo do Header) */
 .pageContent {
-    padding: 2rem;
     flex: 1;
+    overflow-y: auto; /* Scroll apenas no conteúdo */
+    padding: 2rem;
+    scrollbar-gutter: stable; /* Opcional: mantém espaço visual estável se desejar */
 }

@@ -1,7 +1,8 @@
+import React from 'react';
 import { X, AlertTriangle, Trash2 } from "lucide-react";
 import styles from "./styles.module.css";
 
-export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, itemName }) {
+const DeleteConfirmModal = React.memo(({ isOpen, onClose, onConfirm, itemName }) => {
   if (!isOpen) return null;
 
   return (
@@ -36,4 +37,6 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, itemNam
       </div>
     </div>
   );
-}
+});
+
+export default DeleteConfirmModal;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { X, User, Briefcase, Layers, Activity, Fingerprint, Save, Shield, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import styles from "./styles.module.css";
@@ -15,7 +15,8 @@ const initialState = {
   ultimaEntrega: null
 };
 
-export default function FuncionarioModal({ isOpen, onClose, onSave, employee }) {
+// Memoized Modal
+const FuncionarioModal = React.memo(({ isOpen, onClose, onSave, employee }) => {
   const [form, setForm] = useState(initialState);
   
   // States Biometria
@@ -215,4 +216,6 @@ export default function FuncionarioModal({ isOpen, onClose, onSave, employee }) 
       </div>
     </div>
   );
-}
+});
+
+export default FuncionarioModal;

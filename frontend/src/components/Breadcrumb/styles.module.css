@@ -33,6 +33,20 @@
   transform: translateY(-1px);
 }
 
+/* Círculo da Home Ativo (Estado no Dashboard) */
+.homeCircleActive {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  color: var(--primary-color);
+  margin-right: 12px;
+  cursor: default;
+}
+
 .divider {
   width: 1px;
   height: 24px;
@@ -58,6 +72,14 @@
   background-color: #ffffff;
   color: var(--primary-color, #2563eb);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.darkTheme .homeCircleActive {
+  background-color: #ffffff;
+  color: var(--primary-color, #2563eb);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid #ffffff;
+  margin-right: 12px;
 }
 
 .darkTheme .divider {

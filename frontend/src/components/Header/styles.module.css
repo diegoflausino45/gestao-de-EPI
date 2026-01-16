@@ -3,17 +3,15 @@
     align-items: center;
     justify-content: space-between;
     
-    position: sticky;
-    top: 0;
-    z-index: 5;
-
+    /* Layout Fixo pelo Pai */
     width: 100%;
     height: 64px;
     padding: 0 2rem;
+    flex-shrink: 0; /* Impede que o header encolha */
 
     /* Gradiente Azul Charmoso */
     background: linear-gradient(135deg, var(--primary-color, #2563eb), #1e40af);
-    border-bottom: 1px solid rgba(255,255,255,0.1); /* Borda sutil */
+    border-bottom: 1px solid rgba(255,255,255,0.1); 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 

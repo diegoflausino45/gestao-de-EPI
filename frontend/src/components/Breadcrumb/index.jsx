@@ -17,6 +17,10 @@ function Breadcrumb({ theme = 'light' }) {
   if (isHome) {
     return (
       <div className={`${Styles.breadcrumbContainer} ${themeClass}`}>
+        <div className={Styles.homeCircleActive}>
+          <HomeIcon size={20} />
+        </div>
+        <div className={Styles.divider} />
         <h1 className={Styles.mainTitle}>Dashboard</h1>
       </div>
     );

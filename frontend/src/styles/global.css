@@ -12,7 +12,13 @@ html, body {
 }
 
 body {
+
   font-family: 'Inter', sans-serif;
+
   background-color: var(--gray-100);
+
   color: var(--gray-900);
+
 }
+
+
