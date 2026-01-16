@@ -2,43 +2,34 @@
   padding-bottom: 40px;
 }
 
-/* HEADER IDENTIDADE (HERO) */
-.identityHeader {
+/* LAYOUT BENTO GRID (3 Colunas) */
+.profileGrid {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* --- COLUNA 1: CRACHÁ DIGITAL --- */
+.identityCard {
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--gray-100);
-  padding: 32px;
+  padding: 32px 24px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 32px;
-  margin-bottom: 24px;
-  position: relative;
-  overflow: hidden;
+  text-align: center;
+  position: sticky;
+  top: 24px;
 }
 
-/* Efeito de fundo sutil (Marca d'água) */
-.identityHeader::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 100%;
-  background: radial-gradient(circle at top right, var(--gray-50), transparent 70%);
-  z-index: 0;
-}
-
-.avatarSection {
-  position: relative;
-  z-index: 1;
-}
-
-.avatarLarge {
+.avatarWrapper {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: #e0f2fe; /* Azul claro consistente */
+  background-color: #e0f2fe;
   color: #0369a1;
   display: flex;
   align-items: center;
@@ -46,70 +37,118 @@
   font-size: 2.5rem;
   font-weight: 700;
   border: 4px solid white;
-  box-shadow: 0 0 0 1px #e2e8f0, 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 1px #e2e8f0, var(--shadow);
   text-transform: uppercase;
-}
-
-.infoSection {
-  flex: 1;
-  position: relative;
-  z-index: 1;
+  margin-bottom: 16px;
 }
 
 .userName {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--gray-900);
-  margin: 0 0 8px 0;
-  line-height: 1.2;
+  margin: 0 0 4px 0;
 }
 
-.metaInfo {
-  display: flex;
-  gap: 16px;
+.userRole {
+  font-size: 0.9rem;
   color: var(--gray-500);
-  font-size: 0.95rem;
-  align-items: center;
+  margin-bottom: 24px;
+  font-weight: 500;
 }
 
-.separator {
-  width: 4px;
-  height: 4px;
-  background-color: var(--gray-300);
-  border-radius: 50%;
-}
-
-.statusBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background-color: #dcfce7;
-  color: #166534;
-  margin-left: auto; /* Empurra para direita se flex */
-}
-
-/* LAYOUT GRID 1/3 - 2/3 */
-.contentGrid {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-/* CARDS PADRÃO */
-.card {
-  background: white;
+/* Simplified Biometry Status */
+.biometryWidget {
+  width: 100%;
+  background-color: var(--gray-50);
   border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px; /* Mais respiro */
+  text-align: left;
   border: 1px solid var(--gray-100);
-  padding: 24px;
-  height: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.cardTitle {
+.widgetLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.readerName {
+  font-size: 0.9rem; /* Um pouco maior */
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 8px;
+}
+
+.statusWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: white; /* Destaque sutil */
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--gray-100);
+  transition: all 0.2s ease;
+}
+
+/* Efeito de brilho ao passar o mouse (opcional, mas legal) */
+.biometryWidget:hover .statusWrapper {
+  border-color: #dcfce7;
+  background-color: #f0fdf4;
+}
+
+.statusIcon {
+  /* Color defined by status class */
+}
+
+.statusText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+/* Status Variants */
+.statusConnected { color: #16a34a; } /* Green */
+.statusConnected .statusText { color: #15803d; }
+.statusDisconnected { color: var(--danger); }
+.statusSearching { color: var(--warning); }
+
+.infoList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-top: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--gray-100);
+  padding: 16px 0;
+}
+
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.infoLabel { color: var(--gray-500); }
+.infoValue { color: var(--gray-900); font-weight: 600; }
+
+
+/* --- COLUNA 2: CONFIGURAÇÕES (CENTRO) --- */
+.settingsCard {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--gray-100);
+  padding: 32px;
+}
+
+.sectionTitle {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--gray-900);
@@ -119,18 +158,22 @@
   gap: 10px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--gray-100);
+  margin-top: 48px; /* Mais respiro entre seções */
 }
 
-.cardIcon {
-  color: var(--primary-color);
+/* Exceção para o primeiro título */
+.settingsCard > .sectionTitle:first-child {
+  margin-top: 0;
 }
 
-/* FORM STYLES */
-.formStack {
-  display: flex;
-  flex-direction: column;
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
+  margin-bottom: 32px;
 }
+
+.fullWidth { grid-column: span 2; }
 
 .inputGroup {
   display: flex;
@@ -144,15 +187,33 @@
   color: var(--gray-600);
 }
 
+/* Wrapper para input com ícone interno */
+.inputWrapper {
+  position: relative;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
 .input {
   padding: 10px 12px;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   font-size: 0.95rem;
   color: var(--gray-900);
-  background-color: white;
-  transition: all 0.2s;
   width: 100%;
+  transition: all 0.2s;
+}
+
+/* Padding extra se tiver ícone */
+.inputWrapper .input {
+  padding-left: 40px;
 }
 
 .input:focus {
@@ -161,15 +222,9 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Campo Read-Only Estilizado */
-.readOnlyField {
+.input:read-only {
   background-color: var(--gray-50);
-  border-color: var(--gray-100);
   color: var(--gray-500);
-  cursor: default;
-  font-family: 'Courier New', monospace; /* Toque técnico para matrícula */
-  letter-spacing: -0.5px;
-  font-weight: 600;
 }
 
 /* PASSWORD STRENGTH BAR */
@@ -177,7 +232,7 @@
   height: 4px;
   background-color: var(--gray-100);
   border-radius: 2px;
-  margin-top: 4px;
+  margin-top: 8px; /* Mais espaço do input */
   overflow: hidden;
 }
 
@@ -203,9 +258,64 @@
 .textStrong { color: var(--success); }
 
 
-/* BOTÕES */
-.actions {
-  margin-top: 24px;
+/* --- COLUNA 3: STATS (DIREITA) --- */
+.statsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.statCard {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--gray-100);
+  box-shadow: var(--shadow);
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.miniTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.miniEvent {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 0.85rem;
+}
+
+.miniDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.miniContent p { margin: 0; color: var(--gray-800); font-weight: 500; }
+.miniContent span { display: block; color: var(--gray-400); font-size: 0.75rem; margin-top: 2px; }
+
+
+/* BOTÃO SALVAR GERAL */
+.saveBar {
+  margin-top: 32px;
   display: flex;
   justify-content: flex-end;
 }
@@ -224,7 +334,7 @@
   transition: all 0.2s;
 }
 
-.btnPrimary:hover:not(:disabled) {
+.btnPrimary:hover {
   background-color: var(--primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
@@ -235,19 +345,43 @@
   cursor: not-allowed;
 }
 
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Mais espaço entre grupos de inputs */
+}
+
+.passwordFieldsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 12px; /* Espaço extra antes de começar as novas senhas */
+}
+
 /* RESPONSIVO */
+@media (max-width: 1200px) {
+  .profileGrid {
+    grid-template-columns: 300px 1fr;
+  }
+  .statsColumn {
+    grid-column: span 2;
+    flex-direction: row;
+  }
+  .statCard { flex: 1; }
+}
+
 @media (max-width: 900px) {
-  .contentGrid {
+  .profileGrid {
     grid-template-columns: 1fr;
   }
-  
-  .identityHeader {
+  .statsColumn {
     flex-direction: column;
-    text-align: center;
-    padding: 24px;
+    grid-column: span 1;
   }
-  
-  .metaInfo {
-    justify-content: center;
+  .identityCard {
+    position: static;
+    flex-direction: row;
+    gap: 24px;
+    text-align: left;
   }
 }
