@@ -11,6 +11,12 @@
   margin-bottom: 24px;
   gap: 16px;
   flex-wrap: wrap;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .searchWrapper {
@@ -73,6 +79,8 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   overflow: hidden;
   border: 1px solid #f1f5f9;
+  min-height: 200px;
+  animation: fadeInUp 0.5s ease-out 0.2s both; /* Delay 0.2s */
 }
 
 .table {
@@ -119,8 +127,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #e0f2fe;
-  color: #0369a1;
+  background-color: #e0f2fe; /* Sky 100 */
+  color: #0369a1; /* Sky 700 */
   display: flex;
   align-items: center;
   justify-content: center;

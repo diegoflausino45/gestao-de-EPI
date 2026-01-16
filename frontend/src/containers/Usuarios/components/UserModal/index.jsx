@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, User, Mail, Lock, Shield, CheckCircle, Save, ChevronDown, HardHat } from "lucide-react";
+import { X, User, Mail, Lock, Shield, Save, ChevronDown, HardHat } from "lucide-react";
 import { toast } from "react-toastify";
 import styles from "./styles.module.css";
 

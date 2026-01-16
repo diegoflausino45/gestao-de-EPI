@@ -1,41 +1,18 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { 
-  Search, 
-  User, 
-  Calendar, 
-  AlertTriangle, 
-  Package, 
-  Trash2, 
-  Plus, 
-  CheckCircle,
-  ChevronDown,
-  Activity,
-  CalendarClock,
-  UserX,
-  RefreshCw,
-  X
-} from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 import styles from "./styles.module.css";
+import DevolucaoHeader from "./components/DevolucaoHeader";
+import DevolucaoContextCard, { MOTIVOS } from "./components/DevolucaoContextCard";
+import DevolucaoItemsCard from "./components/DevolucaoItemsCard";
+import DevolucaoFooter from "./components/DevolucaoFooter";
 import EpiSelectModal from "./components/EpiSelectModal";
 
-// MOCKS
+// MOCKS & SERVICES
 import funcionariosMock from "../../data/funcionarioMock";
 import { epiMock } from "../../data/epiMock";
-
-// SERVIÇOS
 import { listarEpis } from "../../services/epiApi";
-
-// Opções de Motivo para o Dropdown Rico
-const MOTIVOS = [
-  { value: "Desgaste Natural", label: "Desgaste Natural", icon: Activity },
-  { value: "Vencimento CA", label: "Vencimento do CA", icon: CalendarClock },
-  { value: "Danificado", label: "Danificado em Operação", icon: AlertTriangle },
-  { value: "Desligamento", label: "Desligamento/Demissão", icon: UserX },
-  { value: "Troca", label: "Troca de Tamanho/Modelo", icon: RefreshCw }
-];
 
 export default function Devolucao() {
   const navigate = useNavigate();
@@ -47,10 +24,6 @@ export default function Devolucao() {
   const [motivoSelecionado, setMotivoSelecionado] = useState(MOTIVOS[0]);
   const [observacaoGeral, setObservacaoGeral] = useState("");
   
-  // Controle do Dropdown de Motivo
-  const [isMotivoOpen, setIsMotivoOpen] = useState(false);
-  const motivoDropdownRef = useRef(null);
-
   // Modal de Seleção de EPIs
   const [isModalSelectEpiOpen, setIsModalSelectEpiOpen] = useState(false);
   const [episDisponiveis, setEpisDisponiveis] = useState([]);
@@ -58,17 +31,6 @@ export default function Devolucao() {
 
   // Lista de Itens a Devolver
   const [itensParaDevolver, setItensParaDevolver] = useState([]);
-
-  // Fecha dropdown ao clicar fora
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (motivoDropdownRef.current && !motivoDropdownRef.current.contains(event.target)) {
-        setIsMotivoOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Carrega EPIs quando abre o modal
   useEffect(() => {
@@ -91,9 +53,6 @@ export default function Devolucao() {
     }
   };
 
-  // Filtra EPIs no modal - Não é mais necessário aqui pois foi movido para o modal
-  // Mas precisamos manter a lógica de carregar EPIs para passar a lista bruta
-
   // Filtragem de funcionários para a busca
   const funcionariosFiltrados = useMemo(() => {
     if (!busca || funcionarioSelecionado) return [];
@@ -103,8 +62,8 @@ export default function Devolucao() {
     ).slice(0, 5); // Limita a 5 resultados para o dropdown
   }, [busca, funcionarioSelecionado]);
 
-  // FUNÇÕES DE AÇÃO
-  const handleSelecionarFuncionario = (func) => {
+  // FUNÇÕES DE AÇÃO (useCallback)
+  const handleSelecionarFuncionario = useCallback((func) => {
     setFuncionarioSelecionado(func);
     setBusca(func.nome);
     
@@ -114,50 +73,50 @@ export default function Devolucao() {
       { ...epiMock[1], estado: 'danificado', observacao: '' }
     ];
     setItensParaDevolver(itensIniciais);
-  };
+  }, []);
 
-  const handleLimparFuncionario = () => {
+  const handleLimparFuncionario = useCallback(() => {
     setFuncionarioSelecionado(null);
     setBusca("");
     setItensParaDevolver([]);
-  };
+  }, []);
 
-  const handleAdicionarItem = () => {
+  const handleAdicionarItem = useCallback(() => {
     setIsModalSelectEpiOpen(true);
-  };
+  }, []);
 
-  const handleSelecionarEpi = (epi) => {
+  const handleSelecionarEpi = useCallback((epi) => {
     setItensParaDevolver(prev => [...prev, { ...epi, id: Date.now(), estado: 'bom', observacao: '' }]);
     setIsModalSelectEpiOpen(false);
     toast.success(`${epi.nome} adicionado à lista.`);
-  };
+  }, []);
 
-  const handleRemoverItem = (id) => {
+  const handleRemoverItem = useCallback((id) => {
     setItensParaDevolver(prev => prev.filter(item => item.id !== id));
-  };
+  }, []);
 
-  const handleChangeEstado = (id, novoEstado) => {
+  const handleChangeEstado = useCallback((id, novoEstado) => {
     setItensParaDevolver(prev => prev.map(item => 
       item.id === id ? { ...item, estado: novoEstado } : item
     ));
-  };
+  }, []);
 
-  const handleChangeItemObs = (id, obs) => {
+  const handleChangeItemObs = useCallback((id, obs) => {
     setItensParaDevolver(prev => prev.map(item => 
       item.id === id ? { ...item, observacao: obs } : item
     ));
-  };
+  }, []);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFuncionarioSelecionado(null);
     setBusca("");
     setItensParaDevolver([]);
     setObservacaoGeral("");
     setMotivoSelecionado(MOTIVOS[0]);
     setDataDevolucao(new Date().toISOString().split('T')[0]);
-  };
+  }, []);
 
-  const handleConfirmar = () => {
+  const handleConfirmar = useCallback(() => {
     if (!funcionarioSelecionado) {
       toast.error("Selecione um funcionário primeiro.");
       return;
@@ -177,269 +136,45 @@ export default function Devolucao() {
     // Sucesso
     toast.success("Devolução registrada com sucesso!");
     resetForm();
-  };
-
-  const getInitials = (name) => {
-    return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
-  };
-
-  // Ícone dinâmico do motivo selecionado
-  const MotivoIcon = motivoSelecionado.icon;
+  }, [funcionarioSelecionado, itensParaDevolver, resetForm]);
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h1>Devolução de Equipamentos (EPI)</h1>
-      </header>
+      <DevolucaoHeader />
 
       <div className={styles.grid}>
         
         {/* --- COLUNA ESQUERDA: CONTEXTO --- */}
-        <aside className={styles.leftColumn}>
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <User size={18} />
-              <h3>Identificação e Motivo</h3>
-            </div>
-            <div className={styles.cardBody}>
-              
-              {/* BUSCA */}
-              <div className={styles.searchWrapper}>
-                <Search className={styles.searchIcon} size={18} />
-                <input 
-                  type="text" 
-                  className={styles.searchInput}
-                  placeholder="Buscar funcionário..."
-                  value={busca}
-                  onChange={(e) => {
-                    setBusca(e.target.value);
-                    if (funcionarioSelecionado) setFuncionarioSelecionado(null);
-                  }}
-                />
-                
-                {/* Resultados da Busca */}
-                {funcionariosFiltrados.length > 0 && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0, 
-                    background: 'white', border: '1px solid #e2e8f0', 
-                    borderRadius: '8px', zIndex: 10, marginTop: '4px',
-                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
-                  }}>
-                    {funcionariosFiltrados.map(f => (
-                      <div 
-                        key={f.id} 
-                        className={styles.searchResultItem}
-                        onClick={() => handleSelecionarFuncionario(f)}
-                        style={{
-                          padding: '10px 15px', cursor: 'pointer', display: 'flex', 
-                          alignItems: 'center', gap: '10px', borderBottom: '1px solid #f1f5f9'
-                        }}
-                      >
-                        <div className={styles.avatar} style={{width: '32px', height: '32px', fontSize: '0.8rem'}}>
-                          {getInitials(f.nome)}
-                        </div>
-                        <div>
-                          <div style={{fontSize: '0.85rem', fontWeight: 600}}>{f.nome}</div>
-                          <div style={{fontSize: '0.7rem', color: '#64748b'}}>{f.cargo} • {f.setor}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* CARD DO FUNCIONÁRIO SELECIONADO (ESTILO UNIFICADO) */}
-              {funcionarioSelecionado && (
-                <div className={styles.employeeCard}>
-                  <div className={styles.avatar}>
-                    {getInitials(funcionarioSelecionado.nome)}
-                  </div>
-                  <div className={styles.employeeInfo}>
-                    <h4>{funcionarioSelecionado.nome}</h4>
-                    <p>{funcionarioSelecionado.cargo}</p>
-                    <p><strong>Setor:</strong> {funcionarioSelecionado.setor}</p>
-                  </div>
-                  <button 
-                    onClick={handleLimparFuncionario}
-                    style={{marginLeft: 'auto', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer'}}
-                  >
-                    Alterar
-                  </button>
-                </div>
-              )}
-
-              {/* CAMPOS ADICIONAIS */}
-              <div className={styles.formGroup}>
-                <label>Data da Devolução</label>
-                <div className={styles.inputIconWrapper}>
-                  <Calendar className={styles.inputIcon} size={16} />
-                  <input 
-                    type="date" 
-                    value={dataDevolucao}
-                    onChange={(e) => setDataDevolucao(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* DROPDOWN RICO DE MOTIVO (Igual ao UserModal) */}
-              <div className={styles.formGroup} ref={motivoDropdownRef}>
-                <label>Motivo</label>
-                <div className={styles.dropdownContainer}>
-                  <button 
-                    type="button" 
-                    className={`${styles.dropdownButton} ${isMotivoOpen ? styles.active : ''}`}
-                    onClick={() => setIsMotivoOpen(!isMotivoOpen)}
-                  >
-                    <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                      {/* Ícone Absolute por CSS no .inputIcon, mas aqui precisamos do ícone dinâmico do lado esquerdo */}
-                      <MotivoIcon size={16} className={styles.inputIcon} style={{position: 'absolute', left: '12px', color: '#94a3b8'}} />
-                      <span style={{marginLeft: '2px'}}>{motivoSelecionado.label}</span>
-                    </div>
-                    <ChevronDown size={16} color="#64748b" />
-                  </button>
-
-                  {isMotivoOpen && (
-                    <div className={styles.dropdownMenu}>
-                      {MOTIVOS.map((m) => {
-                        const Icon = m.icon;
-                        return (
-                          <button
-                            key={m.value}
-                            type="button"
-                            className={`${styles.dropdownItem} ${motivoSelecionado.value === m.value ? styles.selected : ''}`}
-                            onClick={() => {
-                              setMotivoSelecionado(m);
-                              setIsMotivoOpen(false);
-                            }}
-                          >
-                            <div className={styles.listIconWrapper}>
-                              <Icon size={16} />
-                            </div>
-                            {m.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Observações Gerais</label>
-                <textarea 
-                  rows="3" 
-                  placeholder="Informações adicionais sobre a devolução..."
-                  value={observacaoGeral}
-                  onChange={(e) => setObservacaoGeral(e.target.value)}
-                />
-              </div>
-
-            </div>
-          </div>
-        </aside>
+        <DevolucaoContextCard 
+          busca={busca}
+          setBusca={setBusca}
+          funcionariosFiltrados={funcionariosFiltrados}
+          funcionarioSelecionado={funcionarioSelecionado}
+          onSelecionarFuncionario={handleSelecionarFuncionario}
+          onLimparFuncionario={handleLimparFuncionario}
+          dataDevolucao={dataDevolucao}
+          setDataDevolucao={setDataDevolucao}
+          motivoSelecionado={motivoSelecionado}
+          setMotivoSelecionado={setMotivoSelecionado}
+          observacaoGeral={observacaoGeral}
+          setObservacaoGeral={setObservacaoGeral}
+        />
 
         {/* --- COLUNA DIREITA: ITENS --- */}
         <main className={styles.rightColumn}>
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <Package size={18} />
-              <h3>Itens para Devolução</h3>
-              <span style={{marginLeft: 'auto', fontSize: '0.75rem', color: '#94a3b8', background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px'}}>
-                {itensParaDevolver.length} itens
-              </span>
-            </div>
-            
-            <div className={styles.cardBody}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Equipamento</th>
-                    <th>Estado de Conservação</th>
-                    <th style={{width: '50px'}}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {itensParaDevolver.length > 0 ? (
-                    itensParaDevolver.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <div className={styles.itemInfo}>
-                            <h5>{item.nome}</h5>
-                            <span>{item.CA || item.ca || "CA não informado"}</span>
-                          </div>
-                          {/* Campo de observação condicional para itens danificados/inutilizáveis */}
-                          {(item.estado === 'danificado' || item.estado === 'inutilizavel') && (
-                            <input 
-                              type="text" 
-                              placeholder="Descreva o problema..."
-                              className={`${styles.itemObsInput} ${item.estado === 'inutilizavel' && !item.observacao ? styles.errorInput : ''}`}
-                              value={item.observacao}
-                              onChange={(e) => handleChangeItemObs(item.id, e.target.value)}
-                              style={{
-                                marginTop: '8px', padding: '4px 8px', fontSize: '0.75rem', 
-                                border: '1px solid #e2e8f0', borderRadius: '4px', width: '100%'
-                              }}
-                            />
-                          )}
-                        </td>
-                        <td>
-                          <div className={styles.statePills}>
-                            <button 
-                              className={`${styles.pill} ${item.estado === 'bom' ? `${styles.pillActive} ${styles.good}` : ''}`}
-                              onClick={() => handleChangeEstado(item.id, 'bom')}
-                            >
-                              Bom
-                            </button>
-                            <button 
-                              className={`${styles.pill} ${item.estado === 'danificado' ? `${styles.pillActive} ${styles.damaged}` : ''}`}
-                              onClick={() => handleChangeEstado(item.id, 'danificado')}
-                            >
-                              Danificado
-                            </button>
-                            <button 
-                              className={`${styles.pill} ${item.estado === 'inutilizavel' ? `${styles.pillActive} ${styles.broken}` : ''}`}
-                              onClick={() => handleChangeEstado(item.id, 'inutilizavel')}
-                            >
-                              Inutilizável
-                            </button>
-                          </div>
-                        </td>
-                        <td>
-                          <button className={styles.removeBtn} onClick={() => handleRemoverItem(item.id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" style={{textAlign: 'center', padding: '40px', color: '#94a3b8'}}>
-                        <Package size={32} style={{marginBottom: '10px', opacity: 0.5}} />
-                        <p>Nenhum item selecionado.</p>
-                        <p style={{fontSize: '0.8rem'}}>Selecione um funcionário ou adicione itens manualmente.</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              <button className={styles.addItemBtn} onClick={handleAdicionarItem}>
-                <Plus size={16} />
-                Adicionar Equipamento Manualmente
-              </button>
-            </div>
-          </div>
+          <DevolucaoItemsCard 
+            itens={itensParaDevolver}
+            onRemoveItem={handleRemoverItem}
+            onChangeEstado={handleChangeEstado}
+            onChangeObs={handleChangeItemObs}
+            onAddItem={handleAdicionarItem}
+          />
 
           {/* RODAPÉ DE AÇÕES */}
-          <div className={styles.actionsFooter}>
-            <button className={styles.btnCancel} onClick={() => navigate("/")}>
-              Cancelar
-            </button>
-            <button className={styles.btnConfirm} onClick={handleConfirmar}>
-              <CheckCircle size={20} />
-              Confirmar Devolução
-            </button>
-          </div>
+          <DevolucaoFooter 
+            onCancel={() => navigate("/")} 
+            onConfirm={handleConfirmar} 
+          />
         </main>
 
         {/* MODAL DE SELEÇÃO DE EPIs */}

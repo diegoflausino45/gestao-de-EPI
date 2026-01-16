@@ -3,6 +3,11 @@
   width: 100%;
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* HEADER CONTROLS */
 .headerControls {
   display: flex;
@@ -11,6 +16,7 @@
   margin-bottom: 24px;
   gap: 16px;
   flex-wrap: wrap;
+  animation: fadeInUp 0.5s ease-out both;
 }
 
 .searchWrapper {
@@ -46,26 +52,6 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.addButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-}
-
-.addButton:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-1px);
-}
-
 /* RICH TABLE STYLES */
 .tableCard {
   background: white;
@@ -73,6 +59,8 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   overflow: hidden;
   border: 1px solid #f1f5f9;
+  min-height: 100px; /* Prevenção de CLS */
+  animation: fadeInUp 0.5s ease-out 0.2s both; /* Delay 0.2s */
 }
 
 .table {

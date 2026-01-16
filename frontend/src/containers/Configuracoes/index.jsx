@@ -5,8 +5,7 @@ import {
   Package, 
   Users, 
   ShieldCheck, 
-  ArrowRight,
-  Settings 
+  ArrowRight 
 } from "lucide-react";
 import styles from "./styles.module.css";
 

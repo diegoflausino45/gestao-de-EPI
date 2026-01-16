@@ -1,22 +1,14 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { 
-  Search, 
-  User, 
-  Calendar, 
-  Package, 
-  Trash2, 
-  Plus, 
-  CheckCircle,
-  Clock,
-  ChevronDown
-} from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 import styles from "./styles.module.css";
+import EntregaHeader from "./components/EntregaHeader";
+import FuncionarioCard from "./components/FuncionarioCard";
+import EntregaCart from "./components/EntregaCart";
+import EntregaFooter from "./components/EntregaFooter";
 import EntregaEpiSelectModal from "./components/EntregaEpiSelectModal";
 import BiometriaAuthModal from "../../components/BiometriaAuthModal";
-import { useAuth } from "../../context/AuthContext";
 
 // MOCKS & SERVICES
 import funcionariosMock from "../../data/funcionarioMock";
@@ -24,7 +16,6 @@ import { epiMock } from "../../data/epiMock";
 import { listarEpis } from "../../services/epiApi";
 
 export default function Entregas() {
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   // ESTADOS PRINCIPAIS
@@ -73,49 +64,52 @@ export default function Entregas() {
     ).slice(0, 5);
   }, [busca, funcionarioSelecionado]);
 
-  // AÇÕES
-  const handleSelecionarFuncionario = (func) => {
+  // AÇÕES - useCallbacks para manter a memoização
+  const handleSelecionarFuncionario = useCallback((func) => {
     setFuncionarioSelecionado(func);
     setBusca(func.nome);
-  };
+  }, []);
 
-  const handleLimparFuncionario = () => {
+  const handleLimparFuncionario = useCallback(() => {
     setFuncionarioSelecionado(null);
     setBusca("");
     setCesta([]); // Limpa cesta se mudar o funcionário (opcional, mas seguro)
-  };
+  }, []);
 
-  const handleAdicionarItem = (epi) => {
-    // Verifica se já existe na cesta
-    const existe = cesta.find(item => item.id === epi.id || item.codigo === epi.codigo);
-    
-    if (existe) {
-      toast.info("Este item já está na cesta. Ajuste a quantidade.");
+  const handleAdicionarItem = useCallback((epi) => {
+    setCesta(prev => {
+      // Verifica se já existe na cesta dentro do callback para ter o estado mais recente
+      const existe = prev.find(item => item.id === epi.id || item.codigo === epi.codigo);
+      
+      if (existe) {
+        toast.info("Este item já está na cesta. Ajuste a quantidade.");
+        setIsModalSelectEpiOpen(false);
+        return prev;
+      }
+
+      toast.success(`${epi.nome} adicionado.`);
       setIsModalSelectEpiOpen(false);
-      return;
-    }
+      
+      return [...prev, { 
+        ...epi, 
+        quantidade: 1, 
+        caEntrega: epi.ca || epi.CA || "", 
+        validadeEntrega: epi.validadeCA || "" 
+      }];
+    });
+  }, []);
 
-    setCesta(prev => [...prev, { 
-      ...epi, 
-      quantidade: 1, 
-      caEntrega: epi.ca || epi.CA || "", 
-      validadeEntrega: epi.validadeCA || "" 
-    }]);
-    setIsModalSelectEpiOpen(false);
-    toast.success(`${epi.nome} adicionado.`);
-  };
-
-  const handleRemoverItem = (codigo) => {
+  const handleRemoverItem = useCallback((codigo) => {
     setCesta(prev => prev.filter(item => item.codigo !== codigo));
-  };
+  }, []);
 
-  const handleItemFieldChange = (codigo, field, value) => {
+  const handleUpdateField = useCallback((codigo, field, value) => {
     setCesta(prev => prev.map(item => 
       item.codigo === codigo ? { ...item, [field]: value } : item
     ));
-  };
+  }, []);
 
-  const handleQuantidadeChange = (codigo, delta) => {
+  const handleUpdateQuantity = useCallback((codigo, delta) => {
     setCesta(prev => prev.map(item => {
       if (item.codigo === codigo) {
         const novaQtd = Math.max(1, item.quantidade + delta);
@@ -127,16 +121,17 @@ export default function Entregas() {
       }
       return item;
     }));
-  };
+  }, []);
 
-  const handleIniciarEntrega = () => {
-    if (!funcionarioSelecionado) return toast.error("Selecione um funcionário.");
-    if (cesta.length === 0) return toast.error("Adicione itens à entrega.");
-
+  const handleIniciarEntrega = useCallback(() => {
+    // Validações simples não precisam de dependências complexas se usarem os valores passados ou refs, 
+    // mas aqui dependemos do estado renderizado. 
+    // Como esta função é chamada pelo botão, ela será recriada se as dependências mudarem.
+    // Para evitar recriação excessiva, poderíamos usar refs, mas a simplicidade vence aqui.
     setIsBioModalOpen(true);
-  };
+  }, []);
 
-  const handleConfirmarEntrega = () => {
+  const handleConfirmarEntrega = useCallback(() => {
     // Aqui seria a chamada ao backend para salvar a entrega
     toast.success("Entrega realizada com sucesso!");
     // Reset total
@@ -144,210 +139,44 @@ export default function Entregas() {
     setBusca("");
     setCesta([]);
     setIsBioModalOpen(false);
-  };
+  }, []);
 
-  const getInitials = (name) => {
-    return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
-  };
+  const totalItems = useMemo(() => cesta.reduce((acc, item) => acc + item.quantidade, 0), [cesta]);
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h1>Terminal de Entrega</h1>
-        <span className={styles.dateBadge}>
-          <Clock size={14} /> {new Date().toLocaleDateString('pt-BR')}
-        </span>
-      </header>
+      <EntregaHeader />
 
       <div className={styles.grid}>
         
         {/* ESQUERDA: IDENTIFICAÇÃO */}
-        <aside className={styles.leftColumn}>
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <User size={18} />
-              <h3>Identificação do Colaborador</h3>
-            </div>
-            
-            <div className={styles.cardBody}>
-              {/* BUSCA */}
-              <div className={styles.searchWrapper}>
-                <Search className={styles.searchIcon} size={18} />
-                <input 
-                  type="text" 
-                  className={styles.searchInput}
-                  placeholder="Buscar funcionário..."
-                  value={busca}
-                  onChange={(e) => {
-                    setBusca(e.target.value);
-                    if (funcionarioSelecionado) setFuncionarioSelecionado(null);
-                  }}
-                />
-                
-                {/* DROPDOWN RESULTADOS */}
-                {funcionariosFiltrados.length > 0 && (
-                  <div className={styles.searchResults}>
-                    {funcionariosFiltrados.map(f => (
-                      <div 
-                        key={f.id} 
-                        className={styles.resultItem}
-                        onClick={() => handleSelecionarFuncionario(f)}
-                      >
-                        <div className={styles.avatarSmall}>{getInitials(f.nome)}</div>
-                        <div>
-                          <div className={styles.resName}>{f.nome}</div>
-                          <div className={styles.resRole}>{f.cargo}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* CARD SELECIONADO */}
-              {funcionarioSelecionado && (
-                <div className={styles.employeeCard}>
-                  <div className={styles.avatarLarge}>
-                    {getInitials(funcionarioSelecionado.nome)}
-                  </div>
-                  <div className={styles.empInfo}>
-                    <h4>{funcionarioSelecionado.nome}</h4>
-                    <span className={styles.empDetail}>{funcionarioSelecionado.cargo}</span>
-                    <span className={styles.empDetail}>{funcionarioSelecionado.setor}</span>
-                  </div>
-                  <button onClick={handleLimparFuncionario} className={styles.changeBtn}>
-                    Alterar
-                  </button>
-                </div>
-              )}
-
-              {/* DADOS ADICIONAIS */}
-              <div className={styles.infoGroup}>
-                <label>Data da Entrega</label>
-                <div className={styles.inputWrapper}>
-                  <Calendar size={16} className={styles.inputIcon} />
-                  <input 
-                    type="date" 
-                    value={dataEntrega}
-                    onChange={(e) => setDataEntrega(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.infoGroup}>
-                <label>Responsável</label>
-                <div className={styles.inputWrapper}>
-                  <User size={16} className={styles.inputIcon} />
-                  <input 
-                    type="text" 
-                    value={responsavel}
-                    readOnly
-                    className={styles.readOnly}
-                  />
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </aside>
+        <FuncionarioCard 
+          busca={busca}
+          setBusca={setBusca}
+          funcionariosFiltrados={funcionariosFiltrados}
+          funcionarioSelecionado={funcionarioSelecionado}
+          onSelecionar={handleSelecionarFuncionario}
+          onLimpar={handleLimparFuncionario}
+          dataEntrega={dataEntrega}
+          setDataEntrega={setDataEntrega}
+          responsavel={responsavel}
+        />
 
         {/* DIREITA: CESTA DE ITENS */}
         <main className={styles.rightColumn}>
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <Package size={18} />
-              <h3>Itens da Entrega</h3>
-              <div className={styles.itemCount}>
-                {cesta.length} {cesta.length === 1 ? 'item' : 'itens'}
-              </div>
-            </div>
+          <EntregaCart 
+            cesta={cesta}
+            onRemoveItem={handleRemoverItem}
+            onUpdateField={handleUpdateField}
+            onUpdateQuantity={handleUpdateQuantity}
+            onOpenSelectModal={() => setIsModalSelectEpiOpen(true)}
+          />
 
-            <div className={styles.cardBody}>
-              <div className={styles.tableWrapper}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>EPI</th>
-                      <th style={{width: '120px'}}>CA</th>
-                      <th style={{width: '150px'}}>Validade</th>
-                      <th style={{textAlign: 'center'}}>Qtd.</th>
-                      <th style={{width: '40px'}}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cesta.length > 0 ? (
-                      cesta.map((item) => (
-                        <tr key={item.codigo}>
-                          <td>
-                            <div className={styles.itemMeta}>
-                              <span className={styles.itemName}>{item.nome}</span>
-                              <span className={styles.itemCode}>Cód: {item.codigo}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <input 
-                              type="text"
-                              className={styles.inlineInput}
-                              value={item.caEntrega}
-                              onChange={(e) => handleItemFieldChange(item.codigo, 'caEntrega', e.target.value)}
-                              placeholder="Nº CA"
-                            />
-                          </td>
-                          <td>
-                            <input 
-                              type="date"
-                              className={styles.inlineInput}
-                              value={item.validadeEntrega ? item.validadeEntrega.split('T')[0] : ''}
-                              onChange={(e) => handleItemFieldChange(item.codigo, 'validadeEntrega', e.target.value)}
-                            />
-                          </td>
-                          <td>
-                            <div className={styles.qtyControl}>
-                              <button onClick={() => handleQuantidadeChange(item.codigo, -1)}>-</button>
-                              <span>{item.quantidade}</span>
-                              <button onClick={() => handleQuantidadeChange(item.codigo, 1)}>+</button>
-                            </div>
-                          </td>
-                          <td>
-                            <button className={styles.removeBtn} onClick={() => handleRemoverItem(item.codigo)}>
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="5">
-                          <div className={styles.emptyState}>
-                            <Package size={40} strokeWidth={1} />
-                            <p>Nenhum item adicionado à entrega.</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <button className={styles.addItemBtn} onClick={() => setIsModalSelectEpiOpen(true)}>
-                <Plus size={18} /> Adicionar EPI
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.footerActions}>
-             <div className={styles.totalInfo}>
-                <span>Total de Itens:</span>
-                <strong>{cesta.reduce((acc, item) => acc + item.quantidade, 0)}</strong>
-             </div>
-             <button 
-               className={styles.confirmBtn} 
-               onClick={handleIniciarEntrega}
-               disabled={!funcionarioSelecionado || cesta.length === 0}
-             >
-               <CheckCircle size={20} /> Confirmar Entrega
-             </button>
-          </div>
+          <EntregaFooter 
+            totalItems={totalItems}
+            onConfirm={handleIniciarEntrega}
+            disabled={!funcionarioSelecionado || cesta.length === 0}
+          />
         </main>
       </div>
 

@@ -3,11 +3,17 @@
   width: 100%;
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  animation: fadeInUp 0.5s ease-out both;
 }
 
 .header h1 {
@@ -25,13 +31,21 @@
   align-items: start;
 }
 
+.leftColumn {
+  animation: fadeInUp 0.5s ease-out 0.1s both;
+}
+
+.rightColumn {
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
 /* CARDS COMPARTILHADOS */
 .card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   border: 1px solid #f1f5f9;
-  /* overflow: hidden; */ /* Removido para não cortar dropdowns */
+  min-height: 200px; /* Prevenção de CLS */
 }
 
 .cardHeader {
@@ -41,8 +55,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  border-top-left-radius: 12px; /* Garante o arredondamento superior */
-  border-top-right-radius: 12px;
+  border-radius: 12px 12px 0 0;
 }
 
 .cardHeader h3 {
@@ -68,6 +81,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
+  pointer-events: none;
 }
 
 .searchInput {
@@ -85,50 +99,77 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* CARD DO FUNCIONÁRIO SELECIONADO */
-.employeeCard {
-  background-color: #f8fafc;
+.searchResults {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  margin-top: 4px;
+  overflow: hidden;
+  animation: fadeInUp 0.2s ease-out;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
+/* CARD DO FUNCIONÁRIO SELECIONADO */
+.employeeCard {
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.avatarLarge {
+  width: 64px;
+  height: 64px;
+  background-color: #e0f2fe; /* Sky 100 */
+  color: #0369a1; /* Sky 700 */
   border-radius: 50%;
-  background-color: #e0f2fe;
-  color: #0369a1;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.5rem;
   font-weight: 700;
-  font-size: 0.9rem;
-  border: 2px solid white;
-  box-shadow: 0 0 0 1px #e2e8f0;
-  flex-shrink: 0;
-}
-
-.employeeInfo {
-  display: flex;
-  flex-direction: column;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #e2e8f0, 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .employeeInfo h4 {
   margin: 0;
   color: #1e293b;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
-.employeeInfo p {
-  margin: 2px 0 0 0;
+.empDetail {
+  display: block;
+  font-size: 0.85rem;
   color: #64748b;
+  margin-top: 2px;
+}
+
+.changeBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
   font-size: 0.8rem;
+}
+
+.changeBtn:hover {
+  color: #3b82f6;
+  text-decoration: underline;
 }
 
 .formGroup {
@@ -195,6 +236,12 @@
   color: #334155;
   font-size: 0.9rem;
   text-align: left;
+}
+
+.dropdownIconLeft {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
 }
 
 .dropdownButton:hover {
@@ -265,9 +312,16 @@
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- FIM DROPDOWN --- */
-
 /* COLUNA DIREITA: ITENS */
+.itemCountBadge {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -299,6 +353,21 @@
 .itemInfo span {
   font-size: 0.75rem;
   color: #94a3b8;
+}
+
+.itemObsInput {
+  margin-top: 8px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  width: 100%;
+  color: #334155;
+}
+
+.itemObsInput:focus {
+  outline: none;
+  border-color: #3b82f6;
 }
 
 /* PÍLULAS DE ESTADO */
@@ -358,6 +427,24 @@
   color: #dc2626;
 }
 
+.emptyState {
+  text-align: center;
+  padding: 40px;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.emptyIcon {
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.emptySub {
+  font-size: 0.8rem;
+}
+
 .addItemBtn {
   display: flex;
   align-items: center;
@@ -390,6 +477,7 @@
   gap: 16px;
   padding-top: 24px;
   border-top: 1px solid #e2e8f0;
+  animation: fadeInUp 0.5s ease-out 0.3s both; /* Delay 0.3s */
 }
 
 .btnCancel {
@@ -431,11 +519,4 @@
 .errorInput {
   border-color: #ef4444 !important;
   background-color: #fef2f2 !important;
-}
-
-.errorText {
-  color: #ef4444;
-  font-size: 0.75rem;
-  margin-top: 4px;
-  display: block;
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, MoreVertical, Edit2, Trash2, Shield, User, CheckCircle } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, User } from "lucide-react";
 import { toast } from "react-toastify";
 import styles from "./styles.module.css";
 import UserModal from "./components/UserModal";

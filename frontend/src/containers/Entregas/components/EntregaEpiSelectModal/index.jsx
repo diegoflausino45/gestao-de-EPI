@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
-import { X, Search, Plus, Package, Loader2, Calendar } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { X, Search, Plus, Package, Loader2 } from "lucide-react";
 import styles from "./styles.module.css";
 
-export default function EntregaEpiSelectModal({ isOpen, onClose, onSelect, epis = [], loading = false }) {
+const EntregaEpiSelectModal = React.memo(({ isOpen, onClose, onSelect, epis = [], loading = false }) => {
   const [busca, setBusca] = useState("");
 
   const episFiltrados = useMemo(() => {
@@ -14,19 +14,6 @@ export default function EntregaEpiSelectModal({ isOpen, onClose, onSelect, epis 
       (epi.ca && String(epi.ca).includes(busca))
     );
   }, [busca, epis]);
-
-  // Função helper para calcular status de validade
-  const getValidadeStatus = (validade) => {
-    if (!validade) return { label: 'N/A', class: 'neutral' };
-    const hoje = new Date();
-    const dataVal = new Date(validade);
-    const diffTime = dataVal - hoje;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return { label: 'Vencido', class: 'expired' };
-    if (diffDays < 30) return { label: 'Vence em breve', class: 'warning' };
-    return { label: 'Válido', class: 'valid' };
-  };
 
   if (!isOpen) return null;
 
@@ -133,4 +120,6 @@ export default function EntregaEpiSelectModal({ isOpen, onClose, onSelect, epis 
       </div>
     </div>
   );
-}
+});
+
+export default EntregaEpiSelectModal;

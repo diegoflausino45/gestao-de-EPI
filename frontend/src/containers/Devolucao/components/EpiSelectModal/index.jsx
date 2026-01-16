@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { X, Search, Plus, Package, Loader2 } from "lucide-react";
 import styles from "./styles.module.css";
 
-export default function EpiSelectModal({ isOpen, onClose, onSelect, epis = [], loading = false }) {
+const EpiSelectModal = React.memo(({ isOpen, onClose, onSelect, epis = [], loading = false }) => {
   const [busca, setBusca] = useState("");
 
   const episFiltrados = useMemo(() => {
@@ -39,6 +39,7 @@ export default function EpiSelectModal({ isOpen, onClose, onSelect, epis = [], l
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               className={styles.searchInput}
+              autoFocus
             />
           </div>
 
@@ -111,4 +112,6 @@ export default function EpiSelectModal({ isOpen, onClose, onSelect, epis = [], l
       </div>
     </div>
   );
-}
+});
+
+export default EpiSelectModal;

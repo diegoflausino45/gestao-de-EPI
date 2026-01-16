@@ -10,6 +10,7 @@
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   width: fit-content; /* Ocupa apenas o necessário */
+  animation: fadeInUp 0.5s ease-out 0.1s both; /* Delay 0.1s */
 }
 
 .tab {
@@ -44,6 +45,7 @@
   padding: 24px;
   margin-bottom: 24px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  animation: fadeInUp 0.5s ease-out 0.2s both; /* Delay 0.2s */
 }
 
 .header {
@@ -128,6 +130,8 @@
   border: 1px solid #e2e8f0;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  min-height: 100px; /* Reduzido para permitir adaptação em listas curtas */
+  animation: fadeInUp 0.5s ease-out 0.3s both; /* Delay 0.3s */
 }
 
 .table {
@@ -138,7 +142,7 @@
 .table th {
   background-color: #f8fafc;
   text-align: left;
-  padding: 16px;
+  padding: 16px 24px; /* Aumentado padding horizontal */
   font-size: 0.75rem; /* Menor */
   font-weight: 700;
   text-transform: uppercase; /* Caixa alta estilo dashboard pro */
@@ -148,7 +152,7 @@
 }
 
 .table td {
-  padding: 16px;
+  padding: 16px 24px; /* Aumentado padding horizontal */
   border-bottom: 1px solid #f1f5f9;
   font-size: 0.9rem;
   color: #334155;
@@ -167,17 +171,19 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #64748b;
+  color: #94a3b8; /* Cor base mais suave */
   padding: 6px;
   border-radius: 4px;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px; /* Tamanho fixo */
+  height: 32px;
 }
 
 .actionBtn:hover {
-  background-color: #e2e8f0;
+  background-color: #f1f5f9;
   color: #2563eb;
 }
 
@@ -198,4 +204,59 @@
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- USER PROFILE (Avatar) --- */
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e0f2fe; /* Light Blue 100 */
+  color: #0369a1; /* Sky 700 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #e2e8f0;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.userSub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* --- EMPTY STATE --- */
+.emptyState {
+  text-align: center;
+  padding: 48px 24px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
